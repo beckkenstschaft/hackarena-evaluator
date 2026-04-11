@@ -1,0 +1,29 @@
+{
+  "name": "hackarena-pro-backend",
+  "version": "1.0.0",
+  "description": "Production backend for HackArena Pro",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": ["hackathon", "evaluation", "platform"],
+  "author": "HackArena",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "html5-qrcode": "^2.3.8",
+    "joi": "^17.12.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.2.3",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.1"
+  }
+}

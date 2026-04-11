@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>🏆 HackJudge Pro | Ultimate QR Judging System</title>
+    <!-- Tailwind CSS + Font Awesome + Google Fonts + Animations -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <!-- HTML5 QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        
+        /* Custom Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            50% { box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .animate-fadeUp { animation: fadeInUp 0.5s ease-out; }
+        .animate-slideRight { animation: slideInRight 0.4s ease-out; }
+        .pulse-glow { animation: pulseGlow 2s infinite; }
+        
+        .score-slider {
+            accent-color: #4f46e5;
+            transition: all 0.2s ease;
+        }
+        .score-slider:hover { transform: scale(1.02); }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-border {
+            position: relative;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            padding: 2px;
+            border-radius: 1rem;
+        }
+        
+        .gradient-border > * {
+            background: white;
+            border-radius: calc(1rem - 2px);
+        }
+        
+        .dark .gradient-border > * {
+            background: #1f2937;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
+        
+        /* QR Scanner Region */
+        .scan-region {
+            border: 2px dashed #4f46e5;
+            background: rgba(79, 70, 229, 0.05);
+            transition: all 0.3s;
+            border-radius: 1rem;
+        }
+        
+        /* Toast Animation */
+        .toast-notification {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(79, 70, 229, 0.2);
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .glass {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 transition-all duration-300">
+
+<div id="app" class="min-h-screen flex flex-col"></div>
+
+<script>
+    // ==================== APPLICATION STATE ====================
+    let currentUser = JSON.parse(localStorage.getItem("hackathon_currentUser") || "null");
+    let darkMode = localStorage.getItem("hackathon_darkMode") === "true";
+    let scannerActive = false;
+    let html5QrCode = null;
+    let leaderboardInterval = null;
+    
+    // ==================== DEMO DATABASE ====================
+    if (!localStorage.getItem("hackathon_teams")) {
+        const teams = [
+            { id: "TEAM_ALPHA", name: "Alpha Innovators", project: "AI-Powered Health Assistant", table: "Table 01", members: 4, track: "AI/ML" },
+            { id: "TEAM_BETA", name: "Beta Wizards", project: "Blockchain Supply Chain", table: "Table 02", members: 3, track: "Blockchain" },
+            { id: "TEAM_GAMMA", name: "Gamma Coders", project: "AR Navigation System", table: "Table 03", members: 5, track: "AR/VR" },
+            { id: "TEAM_DELTA", name: "Delta Vision", project: "Sustainable Energy Tracker", table: "Table 04", members: 4, track: "Sustainability" },
+            { id: "TEAM_SIGMA", name: "Sigma Labs", project: "Smart Agriculture IoT", table: "Table 05", members: 3, track: "IoT" },
+            { id: "TEAM_OMEGA", name: "Omega Devs", project: "Decentralized Voting", table: "Table 06", members: 4, track: "Web3" },
+            { id: "TEAM_NOVA", name: "Nova Spark", project: "E-Learning Platform", table: "Table 07", members: 4, track: "EdTech" },
+            { id: "TEAM_FUSION", name: "Fusion Labs", project: "Quantum Computing Simulator", table: "Table 08", members: 3, track: "Quantum" }
+        ];
+        localStorage.setItem("hackathon_teams", JSON.stringify(teams));
+    }
+    if (!localStorage.getItem("hackathon_submissions")) localStorage.setItem("hackathon_submissions", JSON.stringify([]));
+    if (!localStorage.getItem("hackathon_judges")) {
+        const judges = [
+            { id: "judge1", email: "judge@hackathon.com", password: "password123", name: "Alex Chen", role: "Technical Judge", isAdmin: false, avatar: "AC" },
+            { id: "judge2", email: "sarah@hackathon.com", password: "judge123", name: "Sarah Johnson", role: "Design Judge", isAdmin: false, avatar: "SJ" },
+            { id: "admin1", email: "admin@hackathon.com", password: "admin123", name: "Dr. Smith", role: "Head Judge", isAdmin: true, avatar: "DS" }
+        ];
+        localStorage.setItem("hackathon_judges", JSON.stringify(judges));
+    }
+    
+    // ==================== HELPER FUNCTIONS ====================
+    const getTeams = () => JSON.parse(localStorage.getItem("hackathon_teams"));
+    const getSubmissions = () => JSON.parse(localStorage.getItem("hackathon_submissions"));
+    const saveSubmissions = (data) => localStorage.setItem("hackathon_submissions", JSON.stringify(data));
+    const getJudges = () => JSON.parse(localStorage.getItem("hackathon_judges"));
+    
+    const loginUser = (email, password) => {
+        const judges = getJudges();
+        const user = judges.find(j => j.email === email && j.password === password);
+        if (user) {
+            currentUser = { uid: user.id, email: user.email, name: user.name, role: user.role, isAdmin: user.isAdmin, avatar: user.avatar };
+            localStorage.setItem("hackathon_currentUser", JSON.stringify(currentUser));
+            return true;
+        }
+        return false;
+    };
+    
+    const logoutUser = () => { currentUser = null; localStorage.removeItem("hackathon_currentUser"); if(leaderboardInterval) clearInterval(leaderboardInterval); };
+    const isAdmin = () => currentUser?.isAdmin === true;
+    
+    const getTeamById = (id) => getTeams().find(t => t.id === id);
+    const getAllSubmissionsWithDetails = () => {
+        const subs = getSubmissions();
+        const teams = getTeams();
+        const teamMap = new Map(teams.map(t => [t.id, t]));
+        return subs.map(s => ({ ...s, teamName: teamMap.get(s.teamId)?.name || "Unknown", project: teamMap.get(s.teamId)?.project || "N/A", track: teamMap.get(s.teamId)?.track || "N/A" }));
+    };
+    
+    const submitScore = async (submission) => {
+        const subs = getSubmissions();
+        const exists = subs.find(s => s.teamId === submission.teamId && s.judgeId === submission.judgeId);
+        if (exists) throw new Error("❌ You have already judged this team!");
+        subs.push({ ...submission, submittedAt: new Date().toISOString() });
+        saveSubmissions(subs);
+        return true;
+    };
+    
+    // ==================== DARK MODE ====================
+    const applyDarkMode = () => {
+        if (darkMode) document.documentElement.classList.add("dark");
+        else document.documentElement.classList.remove("dark");
+        localStorage.setItem("hackathon_darkMode", darkMode);
+    };
+    
+    // ==================== ROUTING ====================
+    let currentRoute = window.location.pathname;
+    const navigate = (route) => { window.history.pushState({}, "", route); currentRoute = route; renderApp(); };
+    window.addEventListener("popstate", () => { currentRoute = window.location.pathname; renderApp(); });
+    
+    // ==================== TOAST NOTIFICATION ====================
+    const showToast = (message, type = "success") => {
+        const toast = document.createElement("div");
+        toast.className = `fixed bottom-6 right-6 z-50 toast-notification px-6 py-4 rounded-xl shadow-2xl text-white flex items-center gap-3 ${type === "success" ? "bg-gradient-to-r from-green-500 to-emerald-600" : "bg-gradient-to-r from-red-500 to-pink-600"}`;
+        toast.innerHTML = `<i class="fas ${type === "success" ? "fa-check-circle" : "fa-exclamation-circle"} text-xl"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    };
+    
+    // ==================== COMPONENTS ====================
+    const Navbar = () => `
+        <nav class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-xl sticky top-0 z-20 border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center gap-3 cursor-pointer group" onclick="navigate('/')">
+                        <div class="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <i class="fas fa-trophy text-white text-xl"></i>
+                        </div>
+                        <span class="font-extrabold text-xl gradient-text">HackJudge Pro</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        ${currentUser ? `
+                            <button onclick="navigate('/scanner')" class="relative px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2">
+                                <i class="fas fa-qrcode"></i>
+                                <span class="hidden sm:inline">Scan QR</span>
+                                <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+                            </button>
+                            
+                            <div class="relative group">
+                                <button class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                    <div class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white text-xs font-bold shadow-md">
+                                        ${currentUser.avatar || currentUser.name?.charAt(0) || "J"}
+                                    </div>
+                                    <span class="hidden md:inline text-sm font-medium">${currentUser.name}</span>
+                                    <i class="fas fa-chevron-down text-xs hidden md:inline"></i>
+                                </button>
+                                <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-30 border border-gray-200 dark:border-gray-700">
+                                    <div class="p-3 border-b dark:border-gray-700">
+                                        <p class="font-semibold">${currentUser.name}</p>
+                                        <p class="text-xs text-gray-500">${currentUser.role || "Judge"}</p>
+                                    </div>
+                                    ${isAdmin() ? `<a href="#" onclick="navigate('/admin'); return false;" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition"><i class="fas fa-chart-line w-5"></i>Dashboard</a>` : ""}
+                                    <a href="#" onclick="navigate('/leaderboard'); return false;" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition"><i class="fas fa-ranking-star w-5"></i>Leaderboard</a>
+                                    <a href="#" onclick="navigate('/my-judgings'); return false;" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition"><i class="fas fa-history w-5"></i>My Judgings</a>
+                                    <div class="border-t dark:border-gray-700"></div>
+                                    <button onclick="logout()" class="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition"><i class="fas fa-sign-out-alt w-5"></i>Logout</button>
+                                </div>
+                            </div>
+                        ` : `
+                            <button onclick="navigate('/login')" class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg transition-all">Login</button>
+                        `}
+                        <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center justify-center">
+                            <i class="fas ${darkMode ? "fa-sun" : "fa-moon"} text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    `;
+    
+    const LoginPage = () => `
+        <div class="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+            <div class="max-w-md w-full animate-fadeUp">
+                <div class="gradient-border">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl">
+                        <div class="text-center mb-8">
+                            <div class="w-20 h-20 gradient-bg rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                                <i class="fas fa-microphone-alt text-4xl text-white"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold mt-4 gradient-text">Welcome Back</h2>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Sign in to continue judging</p>
+                        </div>
+                        
+                        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-medium mb-2"><i class="fas fa-envelope mr-2 text-indigo-500"></i>Email Address</label>
+                                <input type="email" id="loginEmail" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" required placeholder="judge@hackathon.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2"><i class="fas fa-lock mr-2 text-indigo-500"></i>Password</label>
+                                <input type="password" id="loginPassword" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 transition" required placeholder="••••••">
+                            </div>
+                            <button type="submit" class="w-full py-3 gradient-bg text-white rounded-xl font-semibold hover:shadow-lg transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                                <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+                            </button>
+                        </form>
+                        
+                        <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                            <p class="text-xs text-center text-gray-500 dark:text-gray-400"><i class="fas fa-info-circle"></i> Demo Credentials:</p>
+                            <div class="grid grid-cols-2 gap-2 mt-2 text-xs font-mono">
+                                <div class="text-center"><span class="text-indigo-600">Judge:</span><br>judge@hackathon.com<br>password123</div>
+                                <div class="text-center"><span class="text-purple-600">Admin:</span><br>admin@hackathon.com<br>admin123</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const ScannerPage = () => `
+        <div class="max-w-2xl mx-auto py-8 px-4 animate-fadeUp">
+            <div class="gradient-border">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden">
+                    <div class="gradient-bg p-6 text-center">
+                        <i class="fas fa-qrcode text-5xl text-white mb-2"></i>
+                        <h2 class="text-2xl font-bold text-white">QR Code Scanner</h2>
+                        <p class="text-indigo-100">Position the QR code in front of the camera</p>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div id="qr-reader" class="w-full rounded-xl overflow-hidden scan-region p-4"></div>
+                        <div id="scan-result" class="mt-4 text-center"></div>
+                        
+                        <div class="flex gap-3 mt-4">
+                            <button onclick="startScanner()" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2"><i class="fas fa-play"></i> Start Camera</button>
+                            <button onclick="stopScanner()" class="flex-1 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition flex items-center justify-center gap-2"><i class="fas fa-stop"></i> Stop Camera</button>
+                        </div>
+                        
+                        <div class="mt-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
+                            <p class="text-sm text-center"><i class="fas fa-lightbulb text-yellow-500"></i> Quick Manual Entry</p>
+                            <div class="flex gap-2 mt-3">
+                                <input type="text" id="manualTeamId" placeholder="Enter Team ID (e.g., TEAM_ALPHA)" class="flex-1 px-4 py-3 rounded-xl border dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500">
+                                <button onclick="manualJudge()" class="px-5 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition"><i class="fas fa-arrow-right"></i></button>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-3 justify-center">
+                                ${getTeams().map(t => `<button onclick="document.getElementById('manualTeamId').value='${t.id}'; manualJudge()" class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-indigo-200 transition">${t.id}</button>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const JudgeFormPage = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        let teamId = urlParams.get("team");
+        if (!teamId) return `<div class="p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-4"></i><h2 class="text-2xl font-bold">No Team Selected</h2><button onclick="navigate('/scanner')" class="mt-4 px-6 py-2 gradient-bg text-white rounded-xl">Go to Scanner</button></div>`;
+        const team = getTeamById(teamId);
+        if (!team) return `<div class="p-8 text-center"><i class="fas fa-search text-6xl text-red-500 mb-4"></i><h2 class="text-2xl font-bold">Team Not Found</h2><button onclick="navigate('/scanner')" class="mt-4 px-6 py-2 gradient-bg text-white rounded-xl">Back to Scanner</button></div>`;
+        
+        return `
+            <div class="max-w-3xl mx-auto py-8 px-4 animate-fadeUp">
+                <div class="gradient-border">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden">
+                        <div class="gradient-bg p-6">
+                            <div class="flex items-center justify-between flex-wrap gap-3">
+                                <div><i class="fas fa-clipboard-list text-3xl text-white"></i></div>
+                                <div class="bg-white/20 px-3 py-1 rounded-full text-white text-sm"><i class="fas fa-qrcode mr-1"></i>QR Scan Mode</div>
+                            </div>
+                            <h1 class="text-2xl font-bold text-white mt-3">Judge Evaluation Form</h1>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm"><i class="fas fa-users"></i> ${team.name}</span>
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm"><i class="fas fa-tag"></i> ${team.id}</span>
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm"><i class="fas fa-microchip"></i> ${team.project}</span>
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm"><i class="fas fa-chart-line"></i> ${team.track}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 md:p-8">
+                            <form id="scoreForm">
+                                ${renderCriteriaCard("innovation", "💡 Innovation Score", "Creativity, uniqueness, problem solving approach", "How unique and creative is the solution?")}
+                                ${renderCriteriaCard("uiux", "🎨 UI/UX Score", "Design quality, user experience, accessibility", "How intuitive and beautiful is the interface?")}
+                                ${renderCriteriaCard("technical", "⚙️ Technical Implementation", "Code quality, functionality, tech stack usage", "How well is the solution technically executed?")}
+                                ${renderCriteriaCard("presentation", "🎤 Presentation Score", "Clarity, confidence, demo effectiveness", "How clear and engaging was the presentation?")}
+                                
+                                <div class="mt-8 p-5 gradient-bg rounded-xl text-white">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-lg font-bold"><i class="fas fa-calculator mr-2"></i>TOTAL SCORE</span>
+                                        <span id="totalScoreDisplay" class="text-4xl font-bold">20/40</span>
+                                    </div>
+                                    <div class="w-full bg-white/30 rounded-full h-2 mt-3">
+                                        <div id="totalProgress" class="bg-white h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="w-full mt-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition transform hover:scale-[1.02] flex items-center justify-center gap-3">
+                                    <i class="fas fa-paper-plane"></i> Submit Scores
+                                </button>
+                            </form>
+                            <div id="formMessage" class="mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+    
+    const renderCriteriaCard = (name, title, description, tooltip) => `
+        <div class="mb-6 p-5 border border-gray-200 dark:border-gray-700 rounded-xl hover:shadow-lg transition-all group">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h3 class="font-bold text-lg">${title}</h3>
+                    <p class="text-xs text-gray-500">${description}</p>
+                </div>
+                <span id="${name}Val" class="text-2xl font-bold gradient-text">5/10</span>
+            </div>
+            <input type="range" name="${name}" min="0" max="10" value="5" step="1" class="w-full score-slider h-2 rounded-lg" oninput="updateSlider('${name}')">
+            <div class="flex justify-between text-xs text-gray-400 mt-2">
+                <span>😞 Poor</span>
+                <span>😐 Average</span>
+                <span>🎉 Excellent</span>
+            </div>
+        </div>
+    `;
+    
+    window.updateSlider = (name) => {
+        const val = document.querySelector(`input[name="${name}"]`)?.value || 5;
+        const span = document.getElementById(`${name}Val`);
+        if (span) span.innerText = `${val}/10`;
+        const scores = {
+            innovation: parseInt(document.querySelector('input[name="innovation"]')?.value || 5),
+            uiux: parseInt(document.querySelector('input[name="uiux"]')?.value || 5),
+            technical: parseInt(document.querySelector('input[name="technical"]')?.value || 5),
+            presentation: parseInt(document.querySelector('input[name="presentation"]')?.value || 5)
+        };
+        const total = scores.innovation + scores.uiux + scores.technical + scores.presentation;
+        const totalSpan = document.getElementById("totalScoreDisplay");
+        if (totalSpan) totalSpan.innerText = `${total}/40`;
+        const progress = document.getElementById("totalProgress");
+        if (progress) progress.style.width = `${(total / 40) * 100}%`;
+    };
+    
+    window.handleScoreSubmit = async (event) => {
+        event.preventDefault();
+        if (!currentUser) { navigate("/login"); return; }
+        const urlParams = new URLSearchParams(window.location.search);
+        const teamId = urlParams.get("team");
+        const scores = {
+            innovation: parseInt(event.target.innovation.value),
+            uiux: parseInt(event.target.uiux.value),
+            technical: parseInt(event.target.technical.value),
+            presentation: parseInt(event.target.presentation.value)
+        };
+        const total = scores.innovation + scores.uiux + scores.technical + scores.presentation;
+        try {
+            await submitScore({ ...scores, total, teamId, judgeId: currentUser.uid, judgeEmail: currentUser.email, judgeName: currentUser.name });
+            showToast("✅ Scores submitted successfully!", "success");
+            setTimeout(() => navigate("/leaderboard"), 1500);
+        } catch (err) {
+            showToast(err.message, "error");
+        }
+    };
+    
+    const LeaderboardPage = async () => {
+        const submissions = getAllSubmissionsWithDetails();
+        const teamScores = new Map();
+        getTeams().forEach(team => teamScores.set(team.id, { teamId: team.id, teamName: team.name, project: team.project, track: team.track, scores: [], judgeCount: 0 }));
+        submissions.forEach(sub => {
+            const t = teamScores.get(sub.teamId);
+            if (t) { t.scores.push(sub.innovation + sub.uiux + sub.technical + sub.presentation); t.judgeCount++; }
+        });
+        const ranking = Array.from(teamScores.values()).map(t => ({
+            ...t, avgScore: t.scores.length ? (t.scores.reduce((a,b)=>a+b,0)/t.scores.length).toFixed(1) : 0
+        })).sort((a,b) => b.avgScore - a.avgScore).map((t,idx) => ({ ...t, rank: idx+1 }));
+        
+        return `
+            <div class="max-w-7xl mx-auto py-8 px-4 animate-fadeUp">
+                <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
+                    <h1 class="text-3xl md:text-4xl font-extrabold gradient-text"><i class="fas fa-trophy mr-3"></i>Live Leaderboard</h1>
+                    <div class="flex items-center gap-2 text-sm text-gray-500"><i class="fas fa-sync-alt fa-spin"></i> Auto-refreshes every 5s</div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    ${ranking.slice(0,3).map((t,idx) => `
+                        <div class="card-hover bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 text-center border-t-4 ${idx===0 ? 'border-yellow-500' : idx===1 ? 'border-gray-400' : 'border-amber-600'}">
+                            <div class="text-6xl mb-3">${idx===0 ? "🥇" : idx===1 ? "🥈" : "🥉"}</div>
+                            <h3 class="font-bold text-xl">${t.teamName}</h3>
+                            <p class="text-sm text-gray-500">${t.project}</p>
+                            <div class="text-4xl font-bold gradient-text mt-3">${t.avgScore}<span class="text-base text-gray-500">/40</span></div>
+                            <p class="text-xs text-gray-400 mt-2"><i class="fas fa-users"></i> ${t.judgeCount} judge(s)</p>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100 dark:bg-gray-700">
+                                <tr><th class="p-4 text-left">Rank</th><th class="p-4 text-left">Team</th><th class="p-4 text-left">Project</th><th class="p-4 text-center">Avg Score</th><th class="p-4 text-center">Judges</th><th class="p-4 text-center">Action</th></tr>
+                            </thead>
+                            <tbody>
+                                ${ranking.map(t => `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"><td class="p-4 font-bold text-center">#${t.rank}</td><td class="p-4"><div class="font-semibold">${t.teamName}</div><div class="text-xs text-gray-400">${t.teamId}</div></td><td class="p-4 text-sm">${t.project}<div class="text-xs text-gray-400">${t.track}</div></td><td class="p-4 text-center"><span class="text-2xl font-bold gradient-text">${t.avgScore}</span></td><td class="p-4 text-center">${t.judgeCount}</td><td class="p-4 text-center"><button onclick="navigate('/judge?team=${t.teamId}')" class="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 rounded-xl text-sm hover:bg-indigo-200 transition"><i class="fas fa-star"></i> Judge</button></td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+    
+    const MyJudgingsPage = async () => {
+        if (!currentUser) return "<div class='p-8 text-center'>Please login</div>";
+        const submissions = getAllSubmissionsWithDetails().filter(s => s.judgeId === currentUser.uid);
+        if(submissions.length === 0) return `<div class="p-8 text-center"><i class="fas fa-history text-6xl text-gray-400 mb-4"></i><h2 class="text-xl">No submissions yet</h2><p class="text-gray-500">Start judging teams to see your history</p><button onclick="navigate('/scanner')" class="mt-4 px-6 py-2 gradient-bg text-white rounded-xl">Start Judging</button></div>`;
+        
+        return `
+            <div class="max-w-5xl mx-auto py-8 px-4">
+                <h1 class="text-3xl font-bold gradient-text mb-6"><i class="fas fa-history mr-3"></i>My Judging History</h1>
+                <div class="grid gap-4">
+                    ${submissions.map(s => `
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 hover:shadow-lg transition">
+                            <div class="flex justify-between items-start flex-wrap gap-3">
+                                <div><h3 class="font-bold text-lg">${s.teamName}</h3><p class="text-sm text-gray-500">${s.project}</p></div>
+                                <div class="text-right"><span class="text-2xl font-bold gradient-text">${s.innovation + s.uiux + s.technical + s.presentation}/40</span><p class="text-xs text-gray-400">${new Date(s.submittedAt).toLocaleString()}</p></div>
+                            </div>
+                            <div class="flex gap-3 mt-3 text-sm"><span class="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">💡 ${s.innovation}/10</span><span class="px-2 py-1 bg-pink-100 dark:bg-pink-900/30 rounded-lg">🎨 ${s.uiux}/10</span><span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-lg">⚙️ ${s.technical}/10</span><span class="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-lg">🎤 ${s.presentation}/10</span></div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    };
+    
+    const AdminDashboard = async () => {
+        const teams = getTeams();
+        const submissions = getAllSubmissionsWithDetails();
+        const stats = teams.map(team => {
+            const subs = submissions.filter(s => s.teamId === team.id);
+            const avg = subs.length ? (subs.reduce((a,b)=>a+b.innovation+b.uiux+b.technical+b.presentation,0)/subs.length).toFixed(1) : 0;
+            return { ...team, avgScore: avg, judgeCount: subs.length, submissions: subs };
+        }).sort((a,b) => b.avgScore - a.avgScore);
+        
+        return `
+            <div class="max-w-7xl mx-auto py-8 px-4">
+                <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
+                    <h1 class="text-3xl font-bold gradient-text"><i class="fas fa-chart-pie mr-3"></i>Admin Dashboard</h1>
+                    <div class="flex gap-3">
+                        <button onclick="exportRankings()" class="px-5 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition flex items-center gap-2"><i class="fas fa-file-excel"></i> Export</button>
+                        <button onclick="clearAllData()" class="px-5 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition flex items-center gap-2"><i class="fas fa-trash"></i> Reset</button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg"><i class="fas fa-users text-3xl text-indigo-600"></i><h3 class="text-3xl font-bold mt-2">${teams.length}</h3><p class="text-gray-500">Total Teams</p></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg"><i class="fas fa-check-circle text-3xl text-green-600"></i><h3 class="text-3xl font-bold mt-2">${submissions.length}</h3><p class="text-gray-500">Submissions</p></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg"><i class="fas fa-user-check text-3xl text-purple-600"></i><h3 class="text-3xl font-bold mt-2">${new Set(submissions.map(s=>s.judgeId)).size}</h3><p class="text-gray-500">Active Judges</p></div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg"><i class="fas fa-chart-line text-3xl text-orange-600"></i><h3 class="text-3xl font-bold mt-2">${stats.filter(t=>t.avgScore>0).length}</h3><p class="text-gray-500">Scored Teams</p></div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-5 border-b"><h2 class="font-bold text-xl"><i class="fas fa-ranking-star mr-2"></i>Team Rankings</h2></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3">Rank</th><th>Team</th><th>Innov</th><th>UI/UX</th><th>Tech</th><th>Pres</th><th>Avg</th><th>Judges</th></tr></thead>
+                            <tbody>${stats.map((t,idx)=>{const avgScores = t.submissions.reduce((a,b)=>({innovation:a.innovation+b.innovation, uiux:a.uiux+b.uiux, technical:a.technical+b.technical, presentation:a.presentation+b.presentation}),{innovation:0,uiux:0,technical:0,presentation:0}); const count=t.submissions.length||1; return `<tr class="border-b"><td class="p-3 text-center font-bold">${idx+1}</td><td class="p-3"><div class="font-semibold">${t.name}</div><div class="text-xs text-gray-400">${t.id}</div></td><td class="p-3 text-center">${count? (avgScores.innovation/count).toFixed(1):0}</td><td class="p-3 text-center">${count? (avgScores.uiux/count).toFixed(1):0}</td><td class="p-3 text-center">${count? (avgScores.technical/count).toFixed(1):0}</td><td class="p-3 text-center">${count? (avgScores.presentation/count).toFixed(1):0}</td><td class="p-3 text-center font-bold gradient-text">${t.avgScore}</td><td class="p-3 text-center">${t.judgeCount}</td></tr>`}).join('')}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+    
+    const HomePage = () => `
+        <div class="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
+            <div class="text-center max-w-4xl animate-fadeUp">
+                <div class="w-28 h-28 gradient-bg rounded-3xl flex items-center justify-center mx-auto shadow-2xl mb-6">
+                    <i class="fas fa-trophy text-5xl text-white"></i>
+                </div>
+                <h1 class="text-5xl md:text-6xl font-extrabold gradient-text mb-4">HackJudge Pro</h1>
+                <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">The Ultimate QR Code Judging Platform</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+                    <div class="card-hover bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl"><i class="fas fa-qrcode text-4xl text-indigo-600"></i><h3 class="font-bold mt-3 text-lg">Scan & Judge</h3><p class="text-sm text-gray-500">Instant QR scanning for fast judging</p></div>
+                    <div class="card-hover bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl"><i class="fas fa-chart-line text-4xl text-green-600"></i><h3 class="font-bold mt-3 text-lg">Live Analytics</h3><p class="text-sm text-gray-500">Real-time leaderboard updates</p></div>
+                    <div class="card-hover bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl"><i class="fas fa-shield-alt text-4xl text-purple-600"></i><h3 class="font-bold mt-3 text-lg">Secure System</h3><p class="text-sm text-gray-500">No duplicate submissions per judge</p></div>
+                </div>
+                
+                ${!currentUser ? `<button onclick="navigate('/login')" class="mt-10 px-8 py-3 gradient-bg text-white rounded-xl font-bold hover:shadow-xl transition transform hover:scale-105">Get Started <i class="fas fa-arrow-right ml-2"></i></button>` : `<button onclick="navigate('/scanner')" class="mt-10 px-8 py-3 gradient-bg text-white rounded-xl font-bold hover:shadow-xl transition transform hover:scale-105 pulse-glow"><i class="fas fa-qrcode mr-2"></i>Start Scanning</button>`}
+            </div>
+        </div>
+    `;
+    
+    // ==================== SCANNER FUNCTIONS ====================
+    window.startScanner = async () => {
+        if (scannerActive) return;
+        const scannerContainer = document.getElementById("qr-reader");
+        if (!scannerContainer) return;
+        html5QrCode = new Html5Qrcode("qr-reader");
+        try {
+            await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 300, height: 300 } }, (decodedText) => {
+                let match = decodedText.match(/[?&]team=([^&]+)/i);
+                let teamId = match ? match[1] : decodedText.split("/judge?team=").pop();
+                if (teamId && getTeamById(teamId)) { stopScanner(); navigate(`/judge?team=${teamId}`); showToast(`✅ Team ${teamId} found!`, "success"); }
+                else showToast("❌ Invalid QR Code", "error");
+            }, () => {});
+            scannerActive = true;
+            document.getElementById("scan-result").innerHTML = '<div class="text-green-600"><i class="fas fa-camera"></i> Camera active - scanning for QR codes...</div>';
+        } catch (err) { showToast("Camera access failed: " + err, "error"); }
+    };
+    
+    window.stopScanner = async () => { if (html5QrCode && scannerActive) { await html5QrCode.stop(); html5QrCode.clear(); scannerActive = false; document.getElementById("qr-reader").innerHTML = ""; document.getElementById("scan-result").innerHTML = '<div class="text-gray-500">Scanner stopped</div>'; } };
+    window.manualJudge = () => { const teamId = document.getElementById("manualTeamId")?.value.trim().toUpperCase(); if (teamId && getTeamById(teamId)) navigate(`/judge?team=${teamId}`); else showToast("Invalid Team ID", "error"); };
+    
+    // ==================== GLOBAL ACTIONS ====================
+    window.handleLogin = (e) => { e.preventDefault(); const email = document.getElementById("loginEmail").value; const pwd = document.getElementById("loginPassword").value; if (loginUser(email, pwd)) { showToast("✅ Login successful! Welcome back.", "success"); navigate("/"); } else showToast("❌ Invalid credentials", "error"); };
+    window.logout = () => { logoutUser(); showToast("Logged out successfully"); navigate("/login"); };
+    window.toggleDarkMode = () => { darkMode = !darkMode; applyDarkMode(); renderApp(); };
+    window.exportRankings = () => { const data = getTeams().map(t=>{const subs=getSubmissions().filter(s=>s.teamId===t.id); const avg=subs.length?(subs.reduce((a,b)=>a+b.innovation+b.uiux+b.technical+b.presentation,0)/subs.length).toFixed(1):0; return{"Team ID":t.id,"Team Name":t.name,"Project":t.project,"Track":t.track,"Average Score":avg,"Judges":subs.length};}); const ws=XLSX.utils.json_to_sheet(data); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Rankings"); XLSX.writeFile(wb,`hackathon_rankings_${new Date().toISOString().slice(0,10)}.xlsx`); showToast("Export complete!"); };
+    window.clearAllData = () => { if(confirm("⚠️ WARNING: This will delete ALL submissions! Are you sure?")){ localStorage.setItem("hackathon_submissions","[]"); showToast("All data reset successfully"); renderApp(); }};
+    
+    // ==================== RENDER APP ====================
+    async function renderApp() {
+        const appDiv = document.getElementById("app");
+        if (!appDiv) return;
+        let content = "";
+        if (!currentUser && currentRoute !== "/login") content = LoginPage();
+        else if (currentRoute === "/login") content = LoginPage();
+        else if (currentRoute === "/admin") content = isAdmin() ? await AdminDashboard() : "<div class='p-8 text-center'>Access Denied</div>";
+        else if (currentRoute === "/leaderboard") { content = await LeaderboardPage(); if(leaderboardInterval) clearInterval(leaderboardInterval); leaderboardInterval = setInterval(async () => { if(window.location.pathname === "/leaderboard") { const newContent = await LeaderboardPage(); document.getElementById("leaderboardContainer") && (document.getElementById("leaderboardContainer").innerHTML = newContent); } else clearInterval(leaderboardInterval); }, 5000); content = `<div id="leaderboardContainer">${content}</div>`; }
+        else if (currentRoute === "/scanner") content = ScannerPage();
+        else if (currentRoute === "/my-judgings") content = await MyJudgingsPage();
+        else if (currentRoute.startsWith("/judge")) content = await JudgeFormPage();
+        else content = HomePage();
+        appDiv.innerHTML = Navbar() + `<main class="flex-1">${content}</main>`;
+        applyDarkMode();
+        if (currentRoute === "/scanner") setTimeout(() => { if(document.getElementById("qr-reader") && !scannerActive) startScanner(); }, 200);
+        if (currentRoute.startsWith("/judge")) setTimeout(() => { const form = document.getElementById("scoreForm"); if(form) form.onsubmit = window.handleScoreSubmit; ["innovation","uiux","technical","presentation"].forEach(s=>updateSlider(s)); }, 100);
+    }
+    
+    renderApp();
+</script>
+</body>
+</html>
