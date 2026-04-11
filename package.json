@@ -1,10 +1,15 @@
 {
-  "name": "hackarena-pro",
+  "name": "hackarena-scanner",
   "version": "1.0.0",
   "private": true,
+  "description": "QR-based hackathon evaluation scanner app with local MySQL database",
   "scripts": {
     "dev": "npm run dev --prefix frontend",
     "build": "npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
-  }
+    "start": "npm run start --prefix backend",
+    "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend"
+  },
+  "keywords": ["hackathon", "qr-scanner", "evaluation"],
+  "author": "",
+  "license": "ISC"
 }

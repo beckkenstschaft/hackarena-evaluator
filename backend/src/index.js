@@ -1,66 +1,52 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import connectDB from './config/db.js';
-import { errorHandler, notFound } from './middleware/errorMiddleware.js';
-
-import authRoutes from './routes/authRoutes.js';
-import teamRoutes from './routes/teamRoutes.js';
-import evaluationRoutes from './routes/evaluationRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
-import leaderboardRoutes from './routes/leaderboardRoutes.js';
-import memoryStore from './config/memoryStore.js';
+import { getDb, closeDb } from './database.js';
+import teamsRouter from './routes/teams.js';
+import judgesRouter from './routes/judges.js';
+import evaluationsRouter from './routes/evaluations.js';
 
 dotenv.config();
 
 const app = express();
-
-try {
-  await connectDB();
-} catch (e) {
-  console.log('Running without MongoDB - using demo data');
-}
-
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
-}));
-
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true
-}));
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { success: false, message: 'Too many requests, please try again later' }
-});
-app.use('/api', limiter);
-
-app.use('/api/auth', authRoutes);
-app.use('/api/teams', teamRoutes);
-app.use('/api/evaluations', evaluationRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
-
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'HackArena Pro API is running', timestamp: new Date().toISOString() });
-});
-
-app.use(notFound);
-app.use(errorHandler);
-
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.use(cors());
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({ message: 'HackArena Scanner API', version: '1.0.0' });
 });
 
-export default app;
+app.get('/health', (req, res) => {
+  try {
+    const db = getDb();
+    db.prepare('SELECT 1').get();
+    res.json({ status: 'ok', database: 'connected' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', database: 'disconnected', error: err.message });
+  }
+});
+
+app.use('/api/teams', teamsRouter);
+app.use('/api/judges', judgesRouter);
+app.use('/api/evaluations', evaluationsRouter);
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+
+process.on('SIGINT', () => {
+  closeDb();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  closeDb();
+  process.exit(0);
+});
