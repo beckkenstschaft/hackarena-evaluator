@@ -12,7 +12,7 @@ function Navigation() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const isActive = (path) => location.pathname === path ? 'active' : '';
-  const isLanding = location.pathname === '/' || location.pathname === '/scan' || location.pathname.startsWith('/scan/');
+  const isLanding = location.pathname === '/' || location.pathname === '/scan' || location.pathname.startsWith('/scan/') || location.pathname.includes('manual');
 
   const handleNavClick = (path) => {
     setSidebarOpen(false);

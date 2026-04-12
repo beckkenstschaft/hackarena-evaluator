@@ -598,7 +598,7 @@ export default function ScannerPage() {
         preload="auto"
         className="landing-video"
       >
-        <source src="https://assets.mixkit.co/videos/preview/mixkit-dark-abstract-video-of-lines-and-dots-27904-large.mp4" type="video/mp4" />
+        <source src="https://cdn.pixabay.com/video/2020/10/25/46531-467180032_large.mp4" type="video/mp4" />
       </video>
       <div className="landing-overlay"></div>
       <p className="landing-welcome">Welcome Judge</p>

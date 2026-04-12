@@ -545,6 +545,10 @@ label {
   .header-content {
     padding: 14px 16px;
   }
+
+  .header-logo {
+    font-size: 18px;
+  }
   
   .container {
     padding: 0 16px;
@@ -555,7 +559,7 @@ label {
   }
 
   .landing-title {
-    font-size: 42px;
+    font-size: 36px;
   }
 
   .landing-welcome {
