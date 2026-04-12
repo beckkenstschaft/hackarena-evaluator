@@ -109,24 +109,50 @@ router.get('/scan-activity', (req, res) => {
   const db = getDb();
   
   try {
-    const activity = db.prepare(`
-      SELECT 
-        q.id,
-        q.scan_time,
-        q.team_id,
-        t.team_name,
-        t.team_leader,
-        j.id as judge_id,
-        j.name as judge_name,
-        e.id as evaluation_id,
-        e.total_score
-      FROM qr_codes q
-      JOIN teams t ON q.team_id = t.id
-      LEFT JOIN judges j ON q.judge_id = j.id
-      LEFT JOIN evaluations e ON q.team_id = e.team_id AND q.judge_id = e.judge_id
-      ORDER BY q.scan_time DESC
-      LIMIT 100
-    `).all();
+    let activity = [];
+    
+    try {
+      activity = db.prepare(`
+        SELECT 
+          q.id,
+          q.scan_time,
+          q.team_id,
+          t.team_name,
+          t.team_leader,
+          j.id as judge_id,
+          j.name as judge_name,
+          e.id as evaluation_id,
+          e.total_score
+        FROM qr_codes q
+        JOIN teams t ON q.team_id = t.id
+        LEFT JOIN judges j ON q.judge_id = j.id
+        LEFT JOIN evaluations e ON q.team_id = e.team_id AND q.judge_id = e.judge_id
+        ORDER BY q.scan_time DESC
+        LIMIT 100
+      `).all();
+    } catch (e) {
+      console.log('QR scans table empty or error:', e.message);
+    }
+
+    if (activity.length === 0) {
+      activity = db.prepare(`
+        SELECT 
+          e.id,
+          e.evaluated_at as scan_time,
+          e.team_id,
+          t.team_name,
+          t.team_leader,
+          e.judge_id,
+          j.name as judge_name,
+          e.id as evaluation_id,
+          e.total_score
+        FROM evaluations e
+        JOIN teams t ON e.team_id = t.id
+        JOIN judges j ON e.judge_id = j.id
+        ORDER BY e.evaluated_at DESC
+        LIMIT 100
+      `).all();
+    }
 
     res.json(activity);
   } catch (err) {

@@ -94,8 +94,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const getTeamById = (id) => teams.find(t => t.id === id);
-
   const filteredTeams = teams.filter(t => 
     t.team_name.toLowerCase().includes(teamSearch.toLowerCase()) ||
     t.team_leader.toLowerCase().includes(teamSearch.toLowerCase())
@@ -127,16 +125,16 @@ export default function AdminDashboard() {
           Judge Activity
         </button>
         <button 
-          className={`tab ${activeTab === 'scans' ? 'active' : ''}`}
-          onClick={() => setActiveTab('scans')}
+          className={`tab ${activeTab === 'evaluations' ? 'active' : ''}`}
+          onClick={() => setActiveTab('evaluations')}
         >
-          Scan History
+          Evaluations
         </button>
         <button 
           className={`tab ${activeTab === 'qr' ? 'active' : ''}`}
           onClick={() => setActiveTab('qr')}
         >
-          QR Management
+          QR Codes
         </button>
       </div>
 
@@ -167,28 +165,9 @@ export default function AdminDashboard() {
               {judgeStats.length > 0 ? (
                 <div>
                   {judgeStats.map(judge => (
-                    <div key={judge.id} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      padding: '12px 0',
-                      borderBottom: '1px solid var(--border)'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                          fontWeight: 600,
-                          fontSize: 14
-                        }}>
-                          {judge.name.charAt(0).toUpperCase()}
-                        </div>
+                    <div key={judge.id} className="judge-row">
+                      <div className="judge-info">
+                        <div className="judge-avatar">{judge.name.charAt(0).toUpperCase()}</div>
                         <span>{judge.name}</span>
                       </div>
                       <span className={`score-badge ${judge.evaluations_count > 0 ? 'score-high' : 'score-medium'}`}>
@@ -207,17 +186,12 @@ export default function AdminDashboard() {
               {stats?.roundStats?.length > 0 ? (
                 <div>
                   {stats.roundStats.map(stat => (
-                    <div key={stat.round_number} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      padding: '12px 0',
-                      borderBottom: '1px solid var(--border)'
-                    }}>
+                    <div key={stat.round_number} className="round-row">
                       <span>Round {stat.round_number}</span>
-                      <div style={{ display: 'flex', gap: 16 }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>{stat.teams_evaluated} teams</span>
-                        <span style={{ color: 'var(--text-secondary)' }}>Avg: {Math.round(stat.avg_score) || '-'}</span>
-                        <span style={{ color: 'var(--text-secondary)' }}>Max: {stat.max_score || '-'}</span>
+                      <div className="round-stats">
+                        <span>{stat.teams_evaluated} teams</span>
+                        <span>Avg: {Math.round(stat.avg_score) || '-'}</span>
+                        <span>Max: {stat.max_score || '-'}</span>
                       </div>
                     </div>
                   ))}
@@ -234,26 +208,26 @@ export default function AdminDashboard() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Time</th>
                     <th>Judge</th>
                     <th>Team</th>
                     <th>Score</th>
+                    <th>Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   {scanActivity.slice(0, 10).map((scan, index) => (
                     <tr key={scan.id || index}>
-                      <td style={{ whiteSpace: 'nowrap' }}>
-                        {scan.evaluated_at ? new Date(scan.evaluated_at).toLocaleString() : '-'}
-                      </td>
-                      <td>{scan.judge_name || <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
-                      <td>{scan.team_name || getTeamById(scan.team_id)?.team_name}</td>
+                      <td>{scan.judge_name || 'N/A'}</td>
+                      <td><strong>{scan.team_name}</strong></td>
                       <td>
                         {scan.total_score ? (
                           <span className="score-badge score-high">{scan.total_score}/100</span>
                         ) : (
                           <span className="score-badge score-medium">Pending</span>
                         )}
+                      </td>
+                      <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                        {scan.evaluated_at ? new Date(scan.evaluated_at).toLocaleString() : '-'}
                       </td>
                     </tr>
                   ))}
@@ -283,21 +257,8 @@ export default function AdminDashboard() {
                   {judgeStats.map(judge => (
                     <tr key={judge.id}>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: 14
-                          }}>
-                            {judge.name.charAt(0).toUpperCase()}
-                          </div>
+                        <div className="judge-info">
+                          <div className="judge-avatar">{judge.name.charAt(0).toUpperCase()}</div>
                           {judge.name}
                         </div>
                       </td>
@@ -318,32 +279,27 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {activeTab === 'scans' && (
+      {activeTab === 'evaluations' && (
         <div className="animate-fade-in">
           <div className="card">
-            <h3 style={{ marginBottom: 20 }}>QR Scan & Evaluation Activity</h3>
+            <h3 style={{ marginBottom: 20 }}>All Evaluations</h3>
             {scanActivity.length > 0 ? (
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Time</th>
                     <th>Judge</th>
                     <th>Team</th>
                     <th>Leader</th>
-                    <th>Scored</th>
+                    <th>Score</th>
+                    <th>Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   {scanActivity.map((scan, index) => (
-                    <tr key={scan.id || index} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.03}s` }}>
-                      <td style={{ whiteSpace: 'nowrap', fontSize: 13 }}>
-                        {scan.evaluated_at ? new Date(scan.evaluated_at).toLocaleString() : scan.scan_time ? new Date(scan.scan_time).toLocaleString() : '-'}
-                      </td>
-                      <td>{scan.judge_name || <span style={{ color: 'var(--text-muted)' }}>Not scanned</span>}</td>
-                      <td>
-                        <strong>{scan.team_name || getTeamById(scan.team_id)?.team_name}</strong>
-                      </td>
-                      <td>{scan.team_leader || getTeamById(scan.team_id)?.team_leader}</td>
+                    <tr key={scan.id || index}>
+                      <td>{scan.judge_name || 'N/A'}</td>
+                      <td><strong>{scan.team_name}</strong></td>
+                      <td>{scan.team_leader}</td>
                       <td>
                         {scan.total_score ? (
                           <span className="score-badge score-high">{scan.total_score}/100</span>
@@ -351,12 +307,15 @@ export default function AdminDashboard() {
                           <span className="score-badge score-medium">Pending</span>
                         )}
                       </td>
+                      <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                        {scan.evaluated_at ? new Date(scan.evaluated_at).toLocaleString() : '-'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>No scan activity yet</p>
+              <p style={{ color: 'var(--text-muted)' }}>No evaluations yet</p>
             )}
           </div>
         </div>
@@ -365,7 +324,7 @@ export default function AdminDashboard() {
       {activeTab === 'qr' && (
         <div className="animate-fade-in">
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
+            <div className="qr-header">
               <div>
                 <h3 style={{ marginBottom: 4 }}>QR Code Management</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
@@ -383,13 +342,13 @@ export default function AdminDashboard() {
             </div>
             
             {filteredTeams.length > 0 ? (
-              <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              <div className="qr-table-container">
                 <table className="table">
                   <thead>
                     <tr>
                       <th>Team</th>
                       <th>Leader</th>
-                      <th>QR Status</th>
+                      <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -402,41 +361,25 @@ export default function AdminDashboard() {
                           {team.current_qr_id ? (
                             <span className="score-badge score-high">Active</span>
                           ) : (
-                            <span className="score-badge score-medium">Not Generated</span>
+                            <span className="score-badge score-medium">Missing</span>
                           )}
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
+                          <div className="qr-actions">
                             {team.current_qr_id ? (
                               <>
-                                <button 
-                                  className="btn btn-secondary" 
-                                  onClick={() => viewTeamQR(team)}
-                                  style={{ padding: '6px 10px', fontSize: 11 }}
-                                >
+                                <button className="btn btn-secondary btn-sm" onClick={() => viewTeamQR(team)}>
                                   View QR
                                 </button>
-                                <button 
-                                  className="btn btn-secondary" 
-                                  onClick={() => viewQRHistory(team.id)}
-                                  style={{ padding: '6px 10px', fontSize: 11 }}
-                                >
+                                <button className="btn btn-secondary btn-sm" onClick={() => viewQRHistory(team.id)}>
                                   History
                                 </button>
-                                <button 
-                                  className="btn btn-primary" 
-                                  onClick={() => handleRegenerateQR(team.id)}
-                                  style={{ padding: '6px 10px', fontSize: 11 }}
-                                >
+                                <button className="btn btn-primary btn-sm" onClick={() => handleRegenerateQR(team.id)}>
                                   Regenerate
                                 </button>
                               </>
                             ) : (
-                              <button 
-                                className="btn btn-primary" 
-                                onClick={() => handleGenerateQR(team.id)}
-                                style={{ padding: '6px 10px', fontSize: 11 }}
-                              >
+                              <button className="btn btn-primary btn-sm" onClick={() => handleGenerateQR(team.id)}>
                                 Generate
                               </button>
                             )}
@@ -455,37 +398,19 @@ export default function AdminDashboard() {
       )}
 
       {showQRModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          animation: 'fadeIn 0.2s ease-out'
-        }} onClick={() => setShowQRModal(null)}>
-          <div className="card animate-scale-in" style={{ maxWidth: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowQRModal(null)}>
+          <div className="card modal-content animate-scale-in" onClick={e => e.stopPropagation()}>
             <h3 style={{ marginBottom: 4 }}>{showQRModal.team_name}</h3>
             <p style={{ marginBottom: 20, color: 'var(--text-secondary)', fontSize: 14 }}>Team QR Code</p>
-            <div style={{ 
-              background: 'white', 
-              padding: 20, 
-              borderRadius: 12, 
-              display: 'inline-block',
-              marginBottom: 20
-            }}>
+            <div className="qr-display">
               <QRCodeDisplay value={`${window.location.origin}/scan?qr=${showQRModal.current_qr_id}`} />
             </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              Scan this code to evaluate {showQRModal.team_name}
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>
+              Scan to evaluate this team
             </p>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <div className="modal-actions">
               <button className="btn btn-primary" onClick={downloadQR}>
-                Download QR
+                Download
               </button>
               <button className="btn btn-secondary" onClick={() => setShowQRModal(null)}>
                 Close
@@ -496,26 +421,11 @@ export default function AdminDashboard() {
       )}
 
       {selectedTeam && qrStatus && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          animation: 'fadeIn 0.2s ease-out'
-        }} onClick={() => { setSelectedTeam(null); setQRStatus(null); }}>
-          <div className="card animate-scale-in" style={{ maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div className="modal-overlay" onClick={() => { setSelectedTeam(null); setQRStatus(null); }}>
+          <div className="card modal-content animate-scale-in" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
               <h3>QR Code History</h3>
-              <button 
-                onClick={() => { setSelectedTeam(null); setQRStatus(null); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
-              >
+              <button className="close-btn" onClick={() => { setSelectedTeam(null); setQRStatus(null); }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -528,7 +438,7 @@ export default function AdminDashboard() {
                   <th>QR ID</th>
                   <th>Status</th>
                   <th>Scanned By</th>
-                  <th>Scan Time</th>
+                  <th>Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -543,7 +453,7 @@ export default function AdminDashboard() {
                       )}
                     </td>
                     <td>{qr.judge_name || '-'}</td>
-                    <td>{qr.scan_time ? new Date(qr.scan_time).toLocaleString() : '-'}</td>
+                    <td style={{ fontSize: 13 }}>{qr.scan_time ? new Date(qr.scan_time).toLocaleString() : '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -551,6 +461,111 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      <style>{`
+        .judge-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .judge-row:last-child { border-bottom: none; }
+        .judge-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .judge-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--primary), var(--primary-light));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: 600;
+          font-size: 14px;
+        }
+        .round-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 12px 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .round-row:last-child { border-bottom: none; }
+        .round-stats {
+          display: flex;
+          gap: 16px;
+          color: var(--text-secondary);
+        }
+        .qr-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        .qr-table-container {
+          max-height: 60vh;
+          overflow-y: auto;
+        }
+        .qr-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .btn-sm {
+          padding: 8px 12px;
+          font-size: 12px;
+        }
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          animation: fadeIn 0.2s ease-out;
+        }
+        .modal-content {
+          max-width: 500px;
+          width: 90%;
+          text-align: center;
+        }
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        .modal-header h3 { margin-bottom: 0; }
+        .close-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 8px;
+          color: var(--text-secondary);
+        }
+        .qr-display {
+          background: white;
+          padding: 20px;
+          border-radius: 12px;
+          display: inline-block;
+        }
+        .modal-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          margin-top: 20px;
+        }
+      `}</style>
     </div>
   );
 }
@@ -569,7 +584,7 @@ function QRCodeDisplay({ value }) {
   }, [value]);
 
   if (!qrUrl) {
-    return <div style={{ width: 200, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
+    return <div style={{ width: 200, height: 200, background: '#f4f4f5', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
   }
 
   return <img src={qrUrl} alt="QR Code" style={{ width: 200, height: 200 }} />;
