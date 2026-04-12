@@ -260,13 +260,13 @@ export default function ScannerPage() {
       <div>
         <h2 className="page-title">Evaluation Submitted!</h2>
         
-        <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card animate-fade-in-up" style={{ marginBottom: 24 }}>
           <h3>{team.team_name}</h3>
           <p><strong>Team Leader:</strong> {team.team_leader}</p>
         </div>
         
-        <div className="card">
-          <h3 style={{ marginBottom: 16 }}>Evaluation Details (Read Only)</h3>
+        <div className="card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <h3 style={{ marginBottom: 16 }}>Evaluation Details</h3>
           <div className="grid grid-2">
             {CRITERIA.map(({ key, label }) => (
               <div key={key}>
@@ -274,8 +274,10 @@ export default function ScannerPage() {
               </div>
             ))}
           </div>
-          <p style={{ marginTop: 16 }}><strong>Total Score:</strong> {getTotalScore()}/100</p>
-          <p><strong>Judged by:</strong> {submittedEval.judge_name}</p>
+          <div className="total-score-display" style={{ marginTop: 16 }}>
+            <strong>Total: {getTotalScore()}/100</strong>
+          </div>
+          <p style={{ marginTop: 16 }}><strong>Judged by:</strong> {submittedEval.judge_name}</p>
           <p><strong>Remarks:</strong> {remarks || 'NA'}</p>
         </div>
         
@@ -295,13 +297,13 @@ export default function ScannerPage() {
     return (
       <div>
         <h2 className="page-title">Team Already Evaluated</h2>
-        <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card animate-fade-in-up" style={{ marginBottom: 24 }}>
           <h3>{team?.team_name}</h3>
           <p><strong>Team Leader:</strong> {team?.team_leader}</p>
           <p><strong>Details:</strong> {team?.team_details || 'N/A'}</p>
         </div>
         
-        <div className="card">
+        <div className="card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <h3 style={{ marginBottom: 16 }}>Previous Evaluation (Round {alreadyEvaluated.round_number})</h3>
           <div className="grid grid-2">
             {CRITERIA.map(({ key, label }) => (
@@ -310,8 +312,10 @@ export default function ScannerPage() {
               </div>
             ))}
           </div>
-          <p style={{ marginTop: 16 }}><strong>Total Score:</strong> {alreadyEvaluated.total_score}/100</p>
-          <p><strong>Judged by:</strong> {alreadyEvaluated.judge_name}</p>
+          <div className="total-score-display" style={{ marginTop: 16 }}>
+            <strong>Total: {alreadyEvaluated.total_score}/100</strong>
+          </div>
+          <p style={{ marginTop: 16 }}><strong>Judged by:</strong> {alreadyEvaluated.judge_name}</p>
           <p><strong>Remarks:</strong> {alreadyEvaluated.remarks}</p>
         </div>
         
@@ -325,11 +329,11 @@ export default function ScannerPage() {
   if (team) {
     return (
       <div>
-        <button className="btn btn-secondary" style={{ marginBottom: 16 }} onClick={resetForm}>
-          ← Back to Scan
+        <button className="btn btn-secondary animate-fade-in" style={{ marginBottom: 16 }} onClick={resetForm}>
+          Back
         </button>
         
-        <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card animate-fade-in-up" style={{ marginBottom: 24 }}>
           <h3>{team.team_name}</h3>
           <p><strong>Team Leader:</strong> {team.team_leader}</p>
           <p><strong>Details:</strong> {team.team_details || 'N/A'}</p>
@@ -343,7 +347,7 @@ export default function ScannerPage() {
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Select Your Name *</label>
+            <label>Select Your Name</label>
             <select 
               className="input" 
               value={selectedJudge}
@@ -358,7 +362,7 @@ export default function ScannerPage() {
           </div>
 
           <div className="form-group">
-            <label>Select Round *</label>
+            <label>Select Round</label>
             <select 
               className="input" 
               value={roundNumber}
@@ -376,7 +380,7 @@ export default function ScannerPage() {
             )}
           </div>
 
-          <div className="card" style={{ marginBottom: 24 }}>
+          <div className="card animate-fade-in-up" style={{ marginBottom: 24, animationDelay: '0.1s' }}>
             <h3 style={{ marginBottom: 16 }}>Criteria Scores (out of 20 each)</h3>
             {CRITERIA.map(({ key, label }) => (
               <div key={key} className="form-group">
@@ -404,7 +408,7 @@ export default function ScannerPage() {
               </div>
             ))}
             
-            <div style={{ marginTop: 16, padding: 16, background: 'var(--bg-tertiary)', borderRadius: 8 }}>
+            <div className="total-score-display">
               <strong>Total Score: {getTotalScore()}/100</strong>
             </div>
           </div>
@@ -428,62 +432,70 @@ export default function ScannerPage() {
     );
   }
 
-  return (
-    <div className="qr-scanner-container">
-      <h2 className="page-title">Scan Team QR Code</h2>
-      
-      {error && <div className="error-message">{error}</div>}
-      {scannerError && <div className="error-message">{scannerError}</div>}
-      
-      {!showScanner && !showManual ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-          <button className="btn btn-primary" onClick={startScanner} style={{ width: '200px', height: '50px', fontSize: '16px' }}>
-            📷 Scan QR Code
-          </button>
-          <button className="btn btn-secondary" onClick={handleManualEntry} style={{ width: '200px' }}>
-            Or Add Manually
-          </button>
-        </div>
-      ) : showManual ? (
-        <div>
-          <button className="btn btn-secondary" style={{ marginBottom: 16 }} onClick={() => setShowManual(false)}>
-            ← Back
-          </button>
-          
-          <div className="card">
-            <h3 style={{ marginBottom: 16 }}>Select Team Manually</h3>
-            <div className="form-group">
-              <label>Choose a Team *</label>
-              <select 
-                className="input" 
-                value={selectedTeamId}
-                onChange={handleTeamSelect}
-                required
-              >
-                <option value="">-- Select Team --</option>
-                {teams.map(t => (
-                  <option key={t.id} value={t.id}>{t.team_name} - {t.team_leader}</option>
-                ))}
-              </select>
+  if (showScanner || showManual) {
+    return (
+      <div className="qr-scanner-container animate-fade-in">
+        {showManual ? (
+          <div>
+            <button className="btn btn-secondary" style={{ marginBottom: 16 }} onClick={() => setShowManual(false)}>
+              Back
+            </button>
+            
+            <div className="card animate-fade-in-up">
+              <h3 style={{ marginBottom: 16 }}>Select Team Manually</h3>
+              <div className="form-group">
+                <label>Choose a Team</label>
+                <select 
+                  className="input" 
+                  value={selectedTeamId}
+                  onChange={handleTeamSelect}
+                  required
+                >
+                  <option value="">-- Select Team --</option>
+                  {teams.map(t => (
+                    <option key={t.id} value={t.id}>{t.team_name} - {t.team_leader}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div>
-          <div id="qr-reader"></div>
-          <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={() => {
-            if (html5QrcodeScanner.current) {
-              html5QrcodeScanner.current.clear().catch(() => {});
-            }
-            setShowScanner(false);
-          }}>
-            Cancel
-          </button>
-          <button className="btn btn-secondary" style={{ marginTop: 16, marginLeft: 8 }} onClick={handleManualEntry}>
-            Add Manually Instead
-          </button>
-        </div>
-      )}
+        ) : (
+          <div>
+            <div id="qr-reader"></div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+              <button className="btn btn-secondary" onClick={() => {
+                if (html5QrcodeScanner.current) {
+                  html5QrcodeScanner.current.clear().catch(() => {});
+                }
+                setShowScanner(false);
+              }}>
+                Cancel
+              </button>
+              <button className="btn btn-secondary" onClick={handleManualEntry}>
+                Manual Entry
+              </button>
+            </div>
+          </div>
+        )}
+        {scannerError && <div className="error-message">{scannerError}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="landing-container">
+      <p className="landing-welcome">Welcome Judge</p>
+      <h1 className="landing-title">Hacknation</h1>
+      <p className="landing-year">2026</p>
+      
+      <div className="landing-buttons">
+        <button className="btn landing-btn-primary" onClick={startScanner}>
+          Scan QR Code
+        </button>
+        <button className="btn landing-btn-secondary" onClick={handleManualEntry}>
+          Manual Entry
+        </button>
+      </div>
     </div>
   );
 }

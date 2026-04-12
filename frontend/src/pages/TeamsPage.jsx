@@ -86,10 +86,10 @@ export default function TeamsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
         <h2 className="page-title" style={{ marginBottom: 0 }}>Teams</h2>
         <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Add Team'}
+          {showForm ? 'Cancel' : '+ Add Team'}
         </button>
       </div>
 
@@ -97,30 +97,34 @@ export default function TeamsPage() {
       {success && <div className="success-message">{success}</div>}
 
       {showForm && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16 }}>Add New Team</h3>
+        <div className="card animate-fade-in-up" style={{ marginBottom: 32 }}>
+          <h3 style={{ marginBottom: 20 }}>Add New Team</h3>
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Team Name *</label>
-              <input
-                type="text"
-                className="input"
-                name="teamName"
-                value={formData.teamName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Team Leader *</label>
-              <input
-                type="text"
-                className="input"
-                name="teamLeader"
-                value={formData.teamLeader}
-                onChange={handleInputChange}
-                required
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-group">
+                <label>Team Name *</label>
+                <input
+                  type="text"
+                  className="input"
+                  name="teamName"
+                  value={formData.teamName}
+                  onChange={handleInputChange}
+                  placeholder="Enter team name"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Team Leader *</label>
+                <input
+                  type="text"
+                  className="input"
+                  name="teamLeader"
+                  value={formData.teamLeader}
+                  onChange={handleInputChange}
+                  placeholder="Leader name"
+                  required
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Team Details</label>
@@ -129,29 +133,33 @@ export default function TeamsPage() {
                 name="teamDetails"
                 value={formData.teamDetails}
                 onChange={handleInputChange}
-                rows="3"
+                rows="2"
+                placeholder="Brief description of the project"
               />
             </div>
-            <div className="form-group">
-              <label>Team Members</label>
-              <input
-                type="text"
-                className="input"
-                name="teamMembers"
-                value={formData.teamMembers}
-                onChange={handleInputChange}
-                placeholder="Comma separated names"
-              />
-            </div>
-            <div className="form-group">
-              <label>Contact Email</label>
-              <input
-                type="email"
-                className="input"
-                name="contactEmail"
-                value={formData.contactEmail}
-                onChange={handleInputChange}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-group">
+                <label>Team Members</label>
+                <input
+                  type="text"
+                  className="input"
+                  name="teamMembers"
+                  value={formData.teamMembers}
+                  onChange={handleInputChange}
+                  placeholder="Comma separated names"
+                />
+              </div>
+              <div className="form-group">
+                <label>Contact Email</label>
+                <input
+                  type="email"
+                  className="input"
+                  name="contactEmail"
+                  value={formData.contactEmail}
+                  onChange={handleInputChange}
+                  placeholder="team@email.com"
+                />
+              </div>
             </div>
             <button type="submit" className="btn btn-primary">Create Team</button>
           </form>
@@ -166,23 +174,26 @@ export default function TeamsPage() {
       ) : (
         <div>
           {teams.map(team => (
-            <div key={team.id} className="team-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h3>{team.team_name}</h3>
-                  <p><strong>Leader:</strong> {team.team_leader}</p>
-                  {team.team_details && <p><strong>Details:</strong> {team.team_details}</p>}
-                  {team.team_members && <p><strong>Members:</strong> {team.team_members}</p>}
-                  {team.contact_email && <p><strong>Email:</strong> {team.contact_email}</p>}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => viewQR(team.id)}>
-                    View QR
-                  </button>
-                  <button className="btn btn-danger" onClick={() => handleDelete(team.id)}>
-                    Delete
-                  </button>
-                </div>
+            <div key={team.id} className="item-card">
+              <div className="item-info">
+                <h3>{team.team_name}</h3>
+                <p>Led by {team.team_leader}</p>
+              </div>
+              <div className="action-btns">
+                <button className="action-btn" onClick={() => viewQR(team.id)} title="View QR">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                </button>
+                <button className="action-btn delete" onClick={() => handleDelete(team.id)} title="Delete">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
               </div>
             </div>
           ))}
@@ -196,18 +207,18 @@ export default function TeamsPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.8)',
+          background: 'rgba(0,0,0,0.6)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          animation: 'fadeIn 0.2s ease-out'
         }} onClick={() => setShowQR(null)}>
-          <div className="card" style={{ maxWidth: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: 8 }}>{showQR.teamName}</h3>
-            <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>Scan this QR code to evaluate</p>
-            <img src={showQR.qrCode} alt="Team QR Code" style={{ maxWidth: '100%', borderRadius: 8 }} />
-            <br />
-            <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={() => setShowQR(null)}>
+          <div className="card animate-scale-in" style={{ maxWidth: 360, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: 4 }}>{showQR.teamName}</h3>
+            <p style={{ marginBottom: 20, color: 'var(--text-secondary)', fontSize: 14 }}>Scan to evaluate</p>
+            <img src={showQR.qrCode} alt="Team QR Code" style={{ width: 200, height: 200, borderRadius: 12 }} />
+            <button className="btn btn-secondary" style={{ marginTop: 24 }} onClick={() => setShowQR(null)}>
               Close
             </button>
           </div>

@@ -66,10 +66,10 @@ export default function JudgesPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
         <h2 className="page-title" style={{ marginBottom: 0 }}>Judges</h2>
         <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Add Judge'}
+          {showForm ? 'Cancel' : '+ Add Judge'}
         </button>
       </div>
 
@@ -77,11 +77,11 @@ export default function JudgesPage() {
       {success && <div className="success-message">{success}</div>}
 
       {showForm && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16 }}>Add New Judge</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Judge Name *</label>
+        <div className="card animate-fade-in-up" style={{ marginBottom: 32 }}>
+          <h3 style={{ marginBottom: 20 }}>Add New Judge</h3>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <label>Judge Name</label>
               <input
                 type="text"
                 className="input"
@@ -103,19 +103,34 @@ export default function JudgesPage() {
         </div>
       ) : (
         <div>
-          {judges.map(judge => (
-            <div key={judge.id} className="team-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h3>{judge.name}</h3>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    Added: {new Date(judge.created_at).toLocaleDateString()}
-                  </p>
+          {judges.map((judge, index) => (
+            <div key={judge.id} className="item-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: 16
+                }}>
+                  {judge.name.charAt(0).toUpperCase()}
                 </div>
-                <button className="btn btn-danger" onClick={() => handleDelete(judge.id)}>
-                  Remove
-                </button>
+                <div className="item-info">
+                  <h3>{judge.name}</h3>
+                  <p>Added {new Date(judge.created_at).toLocaleDateString()}</p>
+                </div>
               </div>
+              <button className="action-btn delete" onClick={() => handleDelete(judge.id)} title="Remove">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
             </div>
           ))}
         </div>
