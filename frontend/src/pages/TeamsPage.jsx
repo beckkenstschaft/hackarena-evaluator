@@ -57,7 +57,7 @@ export default function TeamsPage() {
         console.log('QR generation skipped:', qrErr.message);
       }
       
-      setSuccess('Team created successfully! QR code generated.');
+      setSuccess('Team created successfully!');
       setFormData({ teamName: '', teamLeader: '', teamDetails: '', teamMembers: '', contactEmail: '' });
       setShowForm(false);
       loadTeams();
@@ -79,26 +79,29 @@ export default function TeamsPage() {
     }
   };
 
-  const viewQR = async (teamId) => {
+  const viewQR = async (team) => {
+    if (!team.current_qr_id) {
+      alert('No QR code generated for this team. Generate one from Admin > QR Management.');
+      return;
+    }
+    setShowQR(team);
+  };
+
+  const downloadQR = async () => {
+    if (!showQR?.current_qr_id) return;
     try {
-      const team = teams.find(t => t.id === teamId);
-      if (!team?.current_qr_id) {
-        setError('No QR code generated for this team. Generate one from Admin > QR Management.');
-        return;
-      }
-      const baseUrl = window.location.origin;
-      const qrUrl = `${baseUrl}/scan?qr=${team.current_qr_id}`;
-      
-      const QRCode = await import('qrcode').then(m => m.default);
-      const qrDataUrl = await QRCode.toDataURL(qrUrl, {
-        width: 300,
+      const { default: QRCode } = await import('qrcode');
+      const qrUrl = await QRCode.toDataURL(`${window.location.origin}/scan?qr=${showQR.current_qr_id}`, {
+        width: 400,
         margin: 2,
         color: { dark: '#000000', light: '#ffffff' }
       });
-      
-      setShowQR({ teamName: team.team_name, qrCode: qrDataUrl });
+      const link = document.createElement('a');
+      link.download = `${showQR.team_name.replace(/\s+/g, '_')}_QR.png`;
+      link.href = qrUrl;
+      link.click();
     } catch (err) {
-      setError(err.message);
+      alert('Failed to download QR code');
     }
   };
 
@@ -194,6 +197,10 @@ export default function TeamsPage() {
         </div>
       )}
 
+      <p style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: 14 }}>
+        Total: {teams.length} teams | {teams.filter(t => t.current_qr_id).length} with QR codes
+      </p>
+
       {teams.length === 0 ? (
         <div className="empty-state">
           <h3>No teams yet</h3>
@@ -209,7 +216,7 @@ export default function TeamsPage() {
               </div>
               <div className="action-btns">
                 {team.current_qr_id ? (
-                  <button className="action-btn" onClick={() => viewQR(team.id)} title="View QR">
+                  <button className="action-btn" onClick={() => viewQR(team)} title="View QR">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="7" height="7"></rect>
                       <rect x="14" y="3" width="7" height="7"></rect>
@@ -246,16 +253,44 @@ export default function TeamsPage() {
           zIndex: 1000,
           animation: 'fadeIn 0.2s ease-out'
         }} onClick={() => setShowQR(null)}>
-          <div className="card animate-scale-in" style={{ maxWidth: 360, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: 4 }}>{showQR.teamName}</h3>
-            <p style={{ marginBottom: 20, color: 'var(--text-secondary)', fontSize: 14 }}>Scan to evaluate</p>
-            <img src={showQR.qrCode} alt="Team QR Code" style={{ width: 200, height: 200, borderRadius: 12 }} />
-            <button className="btn btn-secondary" style={{ marginTop: 24 }} onClick={() => setShowQR(null)}>
-              Close
-            </button>
+          <div className="card animate-scale-in" style={{ maxWidth: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: 4 }}>{showQR.team_name}</h3>
+            <p style={{ marginBottom: 20, color: 'var(--text-secondary)', fontSize: 14 }}>Team QR Code</p>
+            <QRCodeDisplay value={`${window.location.origin}/scan?qr=${showQR.current_qr_id}`} />
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>
+              Scan to evaluate this team
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 20 }}>
+              <button className="btn btn-primary" onClick={downloadQR}>
+                Download QR
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowQR(null)}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
+}
+
+function QRCodeDisplay({ value }) {
+  const [qrUrl, setQrUrl] = useState(null);
+
+  useEffect(() => {
+    import('qrcode').then(({ default: QRCode }) => {
+      QRCode.toDataURL(value, {
+        width: 200,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' }
+      }).then(setQrUrl);
+    });
+  }, [value]);
+
+  if (!qrUrl) {
+    return <div style={{ width: 200, height: 200, background: '#f4f4f5', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
+  }
+
+  return <img src={qrUrl} alt="QR Code" style={{ width: 200, height: 200, borderRadius: 12 }} />;
 }
