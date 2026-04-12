@@ -595,10 +595,9 @@ export default function ScannerPage() {
         muted
         loop
         playsInline
-        preload="auto"
         className="landing-video"
       >
-        <source src="https://cdn.pixabay.com/video/2020/10/25/46531-467180032_large.mp4" type="video/mp4" />
+        <source src="https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4" type="video/mp4" />
       </video>
       <div className="landing-overlay"></div>
       <p className="landing-welcome">Welcome Judge</p>

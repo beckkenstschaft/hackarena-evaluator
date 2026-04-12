@@ -132,7 +132,7 @@ export default function AdminDashboard() {
 
       {activeTab === 'overview' && (
         <div>
-          <div className="grid grid-4">
+          <div className="admin-stats-grid">
             <div className="stat-card">
               <div className="stat-value">{stats?.totalTeams || 0}</div>
               <div className="stat-label">Total Teams</div>
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="grid grid-2" style={{ marginTop: 24 }}>
+          <div className="admin-cards-stack" style={{ marginTop: 24 }}>
             <div className="card">
               <h3 style={{ marginBottom: 16 }}>Judge Performance</h3>
               {judgeStats.length > 0 ? (
@@ -293,52 +293,43 @@ export default function AdminDashboard() {
       )}
 
       {activeTab === 'qr' && (
-        <div className="card">
-          <h3 style={{ marginBottom: 8 }}>QR Code Management</h3>
+        <div>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>
             {teams.filter(t => t.current_qr_id).length} of {teams.length} teams have QR codes
           </p>
           
-          {teams.length > 0 ? (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Team</th>
-                  <th>Leader</th>
-                  <th>QR Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teams.map(team => (
-                  <tr key={team.id}>
-                    <td><strong>{team.team_name}</strong></td>
-                    <td>{team.team_leader}</td>
-                    <td>
-                      {team.current_qr_id ? (
-                        <span className="score-badge score-high">Active</span>
-                      ) : (
-                        <span className="score-badge score-medium">Missing</span>
-                      )}
-                    </td>
-                    <td>
-                      {team.current_qr_id ? (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button className="btn btn-secondary" onClick={() => viewTeamQR(team)}>View</button>
-                          <button className="btn btn-secondary" onClick={() => viewQRHistory(team.id)}>History</button>
-                          <button className="btn btn-primary" onClick={() => handleRegenerateQR(team.id)}>Regenerate</button>
-                        </div>
-                      ) : (
-                        <button className="btn btn-primary" onClick={() => handleGenerateQR(team.id)}>Generate</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p style={{ color: 'var(--text-muted)' }}>No teams yet</p>
-          )}
+          <div className="admin-qr-list">
+            {teams.length > 0 ? (
+              teams.map(team => (
+                <div key={team.id} className="admin-qr-item">
+                  <div className="admin-qr-item-header">
+                    <div>
+                      <h4>{team.team_name}</h4>
+                      <p>Leader: {team.team_leader}</p>
+                    </div>
+                    {team.current_qr_id ? (
+                      <span className="score-badge score-high">Active</span>
+                    ) : (
+                      <span className="score-badge score-medium">Missing</span>
+                    )}
+                  </div>
+                  <div className="admin-qr-actions">
+                    {team.current_qr_id ? (
+                      <>
+                        <button className="btn btn-secondary" onClick={() => viewTeamQR(team)}>View QR</button>
+                        <button className="btn btn-secondary" onClick={() => viewQRHistory(team.id)}>History</button>
+                        <button className="btn btn-primary" onClick={() => handleRegenerateQR(team.id)}>Regenerate</button>
+                      </>
+                    ) : (
+                      <button className="btn btn-primary" onClick={() => handleGenerateQR(team.id)}>Generate</button>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>No teams yet</p>
+            )}
+          </div>
         </div>
       )}
 
