@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { getTeam, getTeams, getJudges, submitEvaluation, getEvaluationByTeam, getEvaluationCount, getEvaluatedTeams, scanQR, getTeamQRStatus } from '../utils/api';
 
 const CRITERIA = [
@@ -18,6 +18,7 @@ export default function ScannerPage() {
   const [showScanner, setShowScanner] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [scannerError, setScannerError] = useState('');
+  const [cameraStarting, setCameraStarting] = useState(false);
   const [teams, setTeams] = useState([]);
   const [team, setTeam] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState('');
@@ -164,21 +165,31 @@ export default function ScannerPage() {
     }
   };
 
-  const startScanner = () => {
+  const startScanner = async () => {
     setShowScanner(true);
     setScannerError('');
     setShowManual(false);
     setQrInvalid(false);
+    setCameraStarting(true);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        html5QrcodeScanner.current = new Html5QrcodeScanner(
-          'qr-reader',
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          false
-        );
+        if (html5QrcodeScanner.current) {
+          await html5QrcodeScanner.current.stop();
+        }
         
-        html5QrcodeScanner.current.render(
+        html5QrcodeScanner.current = new Html5Qrcode('qr-reader');
+        
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          preferFrontCamera: false,
+          facingMode: 'environment'
+        };
+        
+        await html5QrcodeScanner.current.start(
+          { facingMode: 'environment' },
+          config,
           (decodedText) => {
             let qrId;
             try {
@@ -189,7 +200,7 @@ export default function ScannerPage() {
             }
             
             if (qrId) {
-              html5QrcodeScanner.current.clear().catch(() => {});
+              html5QrcodeScanner.current.stop().catch(() => {});
               setShowScanner(false);
               handleQRScan(qrId);
             } else {
@@ -197,13 +208,17 @@ export default function ScannerPage() {
             }
           },
           (err) => {
-            console.error('Scanner error:', err);
+            // Ignore scan errors
           }
         );
+        
+        setCameraStarting(false);
       } catch (err) {
+        console.error('Scanner error:', err);
         setScannerError('Unable to start camera. Please use manual entry.');
         setShowScanner(false);
         setShowManual(true);
+        setCameraStarting(false);
       }
     }, 100);
   };
@@ -527,7 +542,7 @@ export default function ScannerPage() {
 
   if (showScanner || showManual) {
     return (
-      <div className="qr-scanner-container animate-fade-in">
+      <div className="animate-fade-in" style={{ maxWidth: 500, margin: '0 auto' }}>
         {showManual ? (
           <div>
             <button className="btn btn-secondary" style={{ marginBottom: 16 }} onClick={() => setShowManual(false)}>
@@ -553,19 +568,34 @@ export default function ScannerPage() {
             </div>
           </div>
         ) : (
-          <div>
-            <div id="qr-reader"></div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <button className="btn btn-secondary" onClick={() => {
-                if (html5QrcodeScanner.current) {
-                  html5QrcodeScanner.current.clear().catch(() => {});
-                }
-                setShowScanner(false);
-              }}>
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3>Scan QR Code</h3>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  if (html5QrcodeScanner.current) {
+                    html5QrcodeScanner.current.stop().catch(() => {});
+                  }
+                  setShowScanner(false);
+                }}
+              >
                 Cancel
               </button>
-              <button className="btn btn-secondary" onClick={handleManualEntry}>
-                Manual Entry
+            </div>
+            
+            {cameraStarting && (
+              <div style={{ textAlign: 'center', padding: 40 }}>
+                <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+                <p style={{ color: 'var(--text-secondary)' }}>Starting camera...</p>
+              </div>
+            )}
+            
+            <div id="qr-reader" style={{ display: cameraStarting ? 'none' : 'block' }}></div>
+            
+            <div style={{ marginTop: 16 }}>
+              <button className="btn btn-secondary" style={{ width: '100%' }} onClick={handleManualEntry}>
+                Switch to Manual Entry
               </button>
             </div>
           </div>
@@ -613,6 +643,23 @@ export default function ScannerPage() {
         .score-input::-webkit-inner-spin-button,
         .score-input::-webkit-outer-spin-button {
           opacity: 1;
+        }
+        
+        #qr-reader video {
+          border-radius: var(--radius);
+          width: 100%;
+        }
+        
+        #qr-reader__scan_region {
+          background: transparent;
+        }
+        
+        #qr-reader__dashboard {
+          display: none;
+        }
+        
+        #qr-reader__dashboard_section_swaplink {
+          display: none;
         }
       `}</style>
     </div>
