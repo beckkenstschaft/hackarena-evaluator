@@ -53,8 +53,7 @@ exportEvaluationsToExcel(db);
 
 if (USE_HTTPS) {
   const httpsOptions = {
-    key: fs.readFileSync(path.join(CERT_PATH, 'server.key')),
-    cert: fs.readFileSync(path.join(CERT_PATH, 'server.crt')),
+    pfx: fs.readFileSync(path.join(CERT_PATH, 'server.pfx')),
     passphrase: 'changeit'
   };
 
