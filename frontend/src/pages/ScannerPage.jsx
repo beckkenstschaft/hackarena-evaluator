@@ -45,8 +45,11 @@ export default function ScannerPage() {
 
   useEffect(() => {
     const qrParam = searchParams.get('qr');
+    const teamParam = searchParams.get('team');
     if (qrParam) {
       handleQRScan(qrParam);
+    } else if (teamParam) {
+      loadTeam(teamParam);
     } else if (teamId) {
       loadTeam(teamId);
     }
@@ -181,17 +184,24 @@ export default function ScannerPage() {
         html5QrcodeScanner.current.render(
           (decodedText) => {
             let qrId;
+            let teamParam;
             try {
               const url = new URL(decodedText);
               qrId = url.searchParams.get('qr');
+              teamParam = url.searchParams.get('team');
             } catch {
               qrId = decodedText.includes('qr=') ? decodedText.split('qr=')[1]?.split('&')[0] : null;
+              teamParam = decodedText.includes('team=') ? decodedText.split('team=')[1]?.split('&')[0] : null;
             }
             
             if (qrId) {
               html5QrcodeScanner.current.clear().catch(() => {});
               setShowScanner(false);
               handleQRScan(qrId);
+            } else if (teamParam) {
+              html5QrcodeScanner.current.clear().catch(() => {});
+              setShowScanner(false);
+              loadTeam(teamParam);
             } else {
               setScannerError('Invalid QR code format');
             }
@@ -306,7 +316,7 @@ export default function ScannerPage() {
     }
   };
 
-  if (loading && !team && (teamId || searchParams.get('qr'))) {
+  if (loading && !team && (teamId || searchParams.get('qr') || searchParams.get('team'))) {
     return (
       <div className="loading">
         <div className="spinner"></div>
