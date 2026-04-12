@@ -551,7 +551,7 @@ label {
   }
   
   .container {
-    padding: 0px 16px;
+    padding: 0 16px;
   }
 
   .landing-container {
@@ -800,7 +800,6 @@ label {
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 8px;
   animation: fadeInUp 0.6s ease-out;
-  padding: 0 20px;
 }
 
 .landing-title {
@@ -814,7 +813,6 @@ label {
   background-clip: text;
   animation: fadeInUp 0.6s ease-out 0.2s both, gradientShift 3s ease infinite;
   margin-bottom: 8px;
-  padding: 0 20px;
   text-shadow: 0 0 60px rgba(99, 102, 241, 0.3);
 }
 
@@ -826,7 +824,6 @@ label {
   animation: fadeInUp 0.6s ease-out 0.4s both;
   margin-bottom: 60px;
   letter-spacing: 4px;
-  padding: 0 20px;
 }
 
 .landing-buttons {
@@ -1205,7 +1202,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 24px;
   color: var(--text-muted);
   font-size: 13px;
-  /* border-top: 1px solid var(--border); */
+  border-top: 1px solid var(--border);
   margin-top: auto;
-  /* background: var(--bg-secondary); */
+  background: var(--bg-secondary);
 }
