@@ -42,7 +42,14 @@ function Navigation({ isAdmin, onLogout, userName }) {
     <>
       <header className={`header ${isLanding ? 'header-dark' : ''}`}>
         <div className="header-content">
-          <h1 className={`header-logo ${isLanding ? 'text-white' : ''}`}>Hacknation</h1>
+          <div className="header-left">
+            <h1 className={`header-logo ${isLanding ? 'text-white' : ''}`}>Hacknation</h1>
+            {userName && (
+              <span className={`welcome-badge ${isLanding ? 'welcome-light' : ''}`}>
+                Welcome {userName}
+              </span>
+            )}
+          </div>
           <button className="menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -187,7 +194,7 @@ function App() {
         </Routes>
       ) : (
         <>
-          <Navigation isAdmin={user.type === 'admin'} onLogout={handleLogout} />
+          <Navigation isAdmin={user.type === 'admin'} userName={user.name} onLogout={handleLogout} />
           <main className="container">
             <Routes>
               <Route path="/" element={<ScannerPage />} />
