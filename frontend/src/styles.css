@@ -300,17 +300,17 @@ label {
 }
 
 .header {
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
+  background: transparent;
+  border-bottom: 1px solid transparent;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
 .header.header-dark {
-  background: rgba(10, 10, 15, 0.85);
+  background: transparent;
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid transparent;
 }
 
 .header.header-dark .header-logo {
@@ -1086,7 +1086,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 24px;
   color: var(--text-muted);
   font-size: 13px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid transparent;
   margin-top: auto;
-  background: var(--bg-secondary);
+  background: transparent;
 }
