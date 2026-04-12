@@ -315,7 +315,7 @@ label {
 
 .header.header-dark .header-logo {
   color: #fff !important;
-  background: linear-gradient(135deg, #fff, var(--primary-light), #fff);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light), var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -330,7 +330,7 @@ label {
 }
 
 .header.header-dark .nav-desktop a {
-  color: rgba(167, 167, 167, 0.85) !important;
+  color: var(--primary-light) !important;
 }
 
 .header.header-dark .nav-desktop a:hover {
@@ -375,8 +375,8 @@ label {
 }
 
 .header-logo.text-white {
-  color: #fff !important;
-  background: linear-gradient(135deg, #fff, var(--primary-light), #fff);
+  color: #939393 !important;
+  background: linear-gradient(135deg, #c0c0c0, var(--primary-light), #b8b8b8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -806,7 +806,7 @@ label {
   font-size: 72px;
   font-weight: 700;
   font-family: 'Space Grotesk', sans-serif;
-  background: linear-gradient(135deg, #fff, var(--primary-light), #fff);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light), var(--accent));
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
