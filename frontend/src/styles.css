@@ -314,33 +314,33 @@ label {
 }
 
 .header.header-dark .header-logo {
-  color: #fff;
-  background: linear-gradient(135deg, var(--primary-light), #fff);
+  color: #fff !important;
+  background: linear-gradient(135deg, #fff, var(--primary-light), #fff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .header.header-dark .menu-btn {
-  color: #fff;
+  color: #fff !important;
 }
 
 .header.header-dark .menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .header.header-dark .nav-desktop a {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 .header.header-dark .nav-desktop a:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .header.header-dark .nav-desktop a.active {
-  background: rgba(99, 102, 241, 0.3);
-  color: #fff;
+  background: rgba(99, 102, 241, 0.35);
+  color: #fff !important;
 }
 
 .header-content {
