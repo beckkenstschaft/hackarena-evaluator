@@ -12,6 +12,7 @@ function Navigation() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const isActive = (path) => location.pathname === path ? 'active' : '';
+  const isLanding = location.pathname === '/' || location.pathname === '/scan';
 
   const handleNavClick = (path) => {
     setSidebarOpen(false);
@@ -31,9 +32,9 @@ function Navigation() {
 
   return (
     <>
-      <header className="header">
+      <header className={`header ${isLanding ? 'header-dark' : ''}`}>
         <div className="header-content">
-          <h1 className="header-logo">Hacknation</h1>
+          <h1 className={`header-logo ${isLanding ? 'text-white' : ''}`}>Hacknation</h1>
           <button className="menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6"></line>
