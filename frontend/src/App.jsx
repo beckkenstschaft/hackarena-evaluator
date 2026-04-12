@@ -6,6 +6,7 @@ import JudgesPage from './pages/JudgesPage';
 import ResultsPage from './pages/ResultsPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
+import SurprisePage from './pages/SurprisePage';
 
 function Navigation({ isAdmin, onLogout, userName }) {
   const location = useLocation();
@@ -194,8 +195,15 @@ function App() {
               <Route path="/scan/:teamId" element={<ScannerPage />} />
               <Route path="/teams" element={<TeamsPage isAdmin={user.type === 'admin'} />} />
               <Route path="/judges" element={<JudgesPage isAdmin={user.type === 'admin'} />} />
-              <Route path="/results" element={<ResultsPage />} />
-              {user.type === 'admin' && <Route path="/admin" element={<AdminDashboard />} />}
+              {user.type === 'admin' && (
+                <>
+                  <Route path="/results" element={<ResultsPage />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                </>
+              )}
+              {user.type === 'judge' && (
+                <Route path="/results" element={<SurprisePage />} />
+              )}
             </Routes>
           </main>
           <footer className="footer">
