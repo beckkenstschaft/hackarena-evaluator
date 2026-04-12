@@ -5,6 +5,7 @@ import { getDb, closeDb } from './database.js';
 import teamsRouter from './routes/teams.js';
 import judgesRouter from './routes/judges.js';
 import evaluationsRouter from './routes/evaluations.js';
+import { exportEvaluationsToExcel } from './utils/excelExport.js';
 
 dotenv.config();
 
@@ -38,6 +39,8 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
+  const db = getDb();
+  exportEvaluationsToExcel(db);
   console.log(`Server running on http://localhost:${PORT}`);
 });
 

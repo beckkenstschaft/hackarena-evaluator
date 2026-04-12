@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDb } from '../database.js';
 import { v4 as uuidv4 } from 'uuid';
+import { exportEvaluationsToExcel } from '../utils/excelExport.js';
 
 const router = express.Router();
 
@@ -57,6 +58,8 @@ router.post('/', (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(id, teamId, judgeId, round, novelty, usage_score, methodology, presentation, uniqueness, totalScore, remarksValue);
+    
+    exportEvaluationsToExcel(db);
     
     res.status(201).json({
       id,
@@ -172,6 +175,17 @@ router.get('/evaluated-teams/:judgeId/:roundNumber', (req, res) => {
   `).all(judgeId, parseInt(roundNumber));
   
   res.json(teams);
+});
+
+router.get('/export', (req, res) => {
+  const db = getDb();
+  const filePath = exportEvaluationsToExcel(db);
+  
+  if (!filePath) {
+    return res.status(404).json({ error: 'No evaluations found to export' });
+  }
+  
+  res.download(filePath, 'evaluations.xlsx');
 });
 
 export default router;
