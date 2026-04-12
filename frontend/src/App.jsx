@@ -7,7 +7,7 @@ import ResultsPage from './pages/ResultsPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 
-function Navigation({ isAdmin }) {
+function Navigation({ isAdmin, onLogout, userName }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,6 +18,12 @@ function Navigation({ isAdmin }) {
   const handleNavClick = (path) => {
     setSidebarOpen(false);
     navigate(path);
+  };
+
+  const handleLogout = () => {
+    setSidebarOpen(false);
+    onLogout();
+    navigate('/');
   };
 
   useEffect(() => {
@@ -66,6 +72,10 @@ function Navigation({ isAdmin }) {
                 Admin
               </Link>
             )}
+            <button className="logout-btn-nav" onClick={onLogout}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Logout
+            </button>
           </nav>
         </div>
       </header>
@@ -139,6 +149,17 @@ function Navigation({ isAdmin }) {
                 Admin
               </button>
             )}
+            <button 
+              className="sidebar-link logout-link" 
+              onClick={handleLogout}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              Logout
+            </button>
           </nav>
         </div>
       </div>
@@ -153,6 +174,10 @@ function App() {
     setUser(userData);
   };
 
+  const handleLogout = () => {
+    setUser(null);
+  };
+
   return (
     <BrowserRouter>
       {!user ? (
@@ -161,14 +186,14 @@ function App() {
         </Routes>
       ) : (
         <>
-          <Navigation isAdmin={user.type === 'admin'} />
+          <Navigation isAdmin={user.type === 'admin'} onLogout={handleLogout} />
           <main className="container">
             <Routes>
               <Route path="/" element={<ScannerPage />} />
               <Route path="/scan" element={<ScannerPage />} />
               <Route path="/scan/:teamId" element={<ScannerPage />} />
-              <Route path="/teams" element={<TeamsPage />} />
-              <Route path="/judges" element={<JudgesPage />} />
+              <Route path="/teams" element={<TeamsPage isAdmin={user.type === 'admin'} />} />
+              <Route path="/judges" element={<JudgesPage isAdmin={user.type === 'admin'} />} />
               <Route path="/results" element={<ResultsPage />} />
               {user.type === 'admin' && <Route path="/admin" element={<AdminDashboard />} />}
             </Routes>
