@@ -46,8 +46,11 @@ export default function ScannerPage() {
 
   useEffect(() => {
     const qrParam = searchParams.get('qr');
+    const teamParam = searchParams.get('team');
     if (qrParam) {
       handleQRScan(qrParam);
+    } else if (teamParam) {
+      loadTeam(teamParam);
     } else if (teamId) {
       loadTeam(teamId);
     }

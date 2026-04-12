@@ -184,7 +184,10 @@ router.post('/scan/:qrId', (req, res) => {
       .run(judgeId, qrId);
 
     const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(qr.team_id);
-    const judge = db.prepare('SELECT * FROM judges WHERE id = ?').get(judgeId);
+    let judge = null;
+    if (judgeId && judgeId !== 'pending') {
+      judge = db.prepare('SELECT * FROM judges WHERE id = ?').get(judgeId);
+    }
 
     res.json({
       success: true,
