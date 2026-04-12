@@ -1,11 +1,4 @@
-const getApiBase = () => {
-  if (window.API_CONFIG && window.API_CONFIG.API_BASE) {
-    return window.API_CONFIG.API_BASE;
-  }
-  return window.location.origin;
-};
-
-const API_BASE = getApiBase();
+const API_BASE = '/api';
 
 async function request(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
