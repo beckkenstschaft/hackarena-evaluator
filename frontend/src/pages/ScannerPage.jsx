@@ -597,7 +597,7 @@ export default function ScannerPage() {
         playsInline
         className="landing-video"
       >
-        <source src="https://cdn.pixabay.com/video/2020/05/25/40130-424930032_large.mp4" type="video/mp4" />
+        <source src="https://freestockfootagearchive.com/wp-content/uploads/2020/10/Abstract-Energy-Flow-Dark-Background-Video-Loop.mp4" type="video/mp4" />
       </video>
       <div className="landing-overlay"></div>
       <p className="landing-welcome">Welcome Judge</p>
