@@ -590,6 +590,16 @@ export default function ScannerPage() {
 
   return (
     <div className="landing-container">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="landing-video"
+      >
+        <source src="https://cdn.pixabay.com/video/2020/05/25/40130-424930032_large.mp4" type="video/mp4" />
+      </video>
+      <div className="landing-overlay"></div>
       <p className="landing-welcome">Welcome Judge</p>
       <h1 className="landing-title">Hacknation</h1>
       <p className="landing-year">2026</p>
@@ -604,6 +614,26 @@ export default function ScannerPage() {
       </div>
 
       <style>{`
+        .landing-video {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: -1;
+        }
+
+        .landing-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(10, 10, 15, 0.75);
+          z-index: -1;
+        }
+
         .scores-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

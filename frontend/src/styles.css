@@ -37,6 +37,8 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes fadeInUp {
@@ -294,6 +296,7 @@ label {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+  flex: 1;
 }
 
 .header {
@@ -697,36 +700,39 @@ label {
   justify-content: center;
   text-align: center;
   padding: 40px 20px;
+  position: relative;
 }
 
 .landing-welcome {
   font-size: 18px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.7);
   margin-bottom: 8px;
   animation: fadeInUp 0.6s ease-out;
 }
 
 .landing-title {
-  font-size: 56px;
+  font-size: 72px;
   font-weight: 700;
   font-family: 'Space Grotesk', sans-serif;
-  background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary));
+  background: linear-gradient(135deg, #fff, var(--primary-light), #fff);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: fadeInUp 0.6s ease-out 0.2s both, gradientShift 3s ease infinite;
   margin-bottom: 8px;
+  text-shadow: 0 0 60px rgba(99, 102, 241, 0.3);
 }
 
 .landing-year {
   font-size: 32px;
   font-weight: 600;
   font-family: 'Space Grotesk', sans-serif;
-  color: var(--text-primary);
+  color: rgba(255, 255, 255, 0.9);
   animation: fadeInUp 0.6s ease-out 0.4s both;
   margin-bottom: 60px;
+  letter-spacing: 4px;
 }
 
 .landing-buttons {
@@ -742,29 +748,31 @@ label {
   border-radius: 12px;
   min-width: 200px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
 }
 
 .landing-btn-primary {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .landing-btn-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
 }
 
 .landing-btn-secondary {
-  background: var(--bg-secondary);
-  border: 1.5px solid var(--border);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 .landing-btn-secondary:hover {
   border-color: var(--primary);
-  color: var(--primary);
-  background: rgba(99, 102, 241, 0.05);
+  color: var(--primary-light);
+  background: rgba(99, 102, 241, 0.1);
   transform: translateY(-3px);
 }
 
@@ -1012,4 +1020,13 @@ input[type="range"]::-moz-range-thumb {
   background: var(--primary);
   color: white;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
 }

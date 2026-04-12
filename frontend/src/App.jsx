@@ -140,6 +140,9 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </main>
+      <footer className="footer">
+        <p>&copy; Syed Amaan Hasan. All rights reserved.</p>
+      </footer>
     </BrowserRouter>
   );
 }
