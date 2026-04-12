@@ -131,3 +131,31 @@ export async function regenerateTeamQR(teamId, baseUrl) {
 export async function getTeamQRStatus(teamId) {
   return request(`/admin/teams/${teamId}/qr-status`);
 }
+
+export async function adminLogin(username, password) {
+  return request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password })
+  });
+}
+
+export async function adminLogout(adminName) {
+  return request('/auth/logout', {
+    method: 'POST',
+    body: JSON.stringify({ adminName })
+  });
+}
+
+export async function logTabAccess(adminName, tabName) {
+  return request('/auth/tab-access', {
+    method: 'POST',
+    body: JSON.stringify({ adminName, tabName })
+  });
+}
+
+export async function logAdminAction(adminName, action, details = {}) {
+  return request('/auth/action', {
+    method: 'POST',
+    body: JSON.stringify({ adminName, action, details })
+  });
+}

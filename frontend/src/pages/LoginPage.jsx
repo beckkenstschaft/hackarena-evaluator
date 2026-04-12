@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const ADMIN_USERS = [
-  { name: 'Kshitij Jain', username: 'Kshitij Jain', password: 'Admin@kshitij2026' },
-  { name: 'Syed Amaan Hasan', username: 'Syed Amaan Hasan', password: 'Tatazest1065@' }
-];
+import { adminLogin } from '../utils/api';
 
 export default function LoginPage({ onLogin }) {
   const [loginType, setLoginType] = useState(null);
@@ -18,17 +14,18 @@ export default function LoginPage({ onLogin }) {
     navigate('/');
   };
 
-  const handleAdminSubmit = (e) => {
+  const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    const admin = ADMIN_USERS.find(
-      u => u.username === username && u.password === password
-    );
-    
-    if (admin) {
-      onLogin({ type: 'admin', name: admin.name });
-      navigate('/');
-    } else {
-      setError('Invalid credentials');
+    try {
+      const response = await adminLogin(username, password);
+      if (response.success) {
+        onLogin({ type: 'admin', name: response.name });
+        navigate('/');
+      } else {
+        setError('Invalid credentials');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
     }
   };
 

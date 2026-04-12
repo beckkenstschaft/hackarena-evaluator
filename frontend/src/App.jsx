@@ -7,6 +7,7 @@ import ResultsPage from './pages/ResultsPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 import SurprisePage from './pages/SurprisePage';
+import { adminLogout, logTabAccess, logAdminAction } from './utils/api';
 
 function Navigation({ isAdmin, onLogout, userName }) {
   const location = useLocation();
@@ -183,7 +184,27 @@ function App() {
   };
 
   const handleLogout = () => {
+    if (user && user.name) {
+      adminLogout(user.name).catch(console.error);
+    }
     setUser(null);
+  };
+
+  useEffect(() => {
+    if (user && user.type === 'admin' && user.name) {
+      logTabAccess(user.name, 'Login').catch(console.error);
+    }
+  }, [user]);
+
+  const handleNavigation = (path) => {
+    if (user && user.type === 'admin' && user.name) {
+      const tabName = path === '/' ? 'Scan' : 
+                      path === '/teams' ? 'Teams' : 
+                      path === '/judges' ? 'Judges' : 
+                      path === '/results' ? 'Results' : 
+                      path === '/admin' ? 'Admin' : path;
+      logTabAccess(user.name, tabName).catch(console.error);
+    }
   };
 
   return (
@@ -194,7 +215,7 @@ function App() {
         </Routes>
       ) : (
         <>
-          <Navigation isAdmin={user.type === 'admin'} userName={user.name} onLogout={handleLogout} />
+          <Navigation isAdmin={user.type === 'admin'} userName={user.type === 'judge' ? 'Judge' : (user.name || '')} onLogout={handleLogout} />
           <main className="container">
             <Routes>
               <Route path="/" element={<ScannerPage />} />
