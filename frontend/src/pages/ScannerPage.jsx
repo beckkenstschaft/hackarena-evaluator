@@ -127,8 +127,10 @@ export default function ScannerPage() {
     try {
       setLoading(true);
       setScannedJudgeId(null);
+      setError('');
       
       const result = await scanQR(qrId, 'pending');
+      console.log('QR Scan result:', result);
       
       if (!result.success) {
         setQrInvalid(true);
@@ -152,6 +154,7 @@ export default function ScannerPage() {
       }
       
     } catch (err) {
+      console.error('QR Scan error:', err);
       if (err.message.includes('discontinued')) {
         setQrInvalid(true);
         setError('This QR code has been discontinued. Please use a new QR code.');
@@ -331,7 +334,7 @@ export default function ScannerPage() {
     }
   };
 
-  if (loading && !team && (teamId || searchParams.get('qr'))) {
+  if (loading) {
     return (
       <div className="loading">
         <div className="spinner"></div>
