@@ -39,8 +39,17 @@ export default function TeamsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.teamName || !formData.teamLeader) {
+    
+    const trimmedName = formData.teamName.trim();
+    const trimmedLeader = formData.teamLeader.trim();
+    
+    if (!trimmedName || !trimmedLeader) {
       setError('Team name and team leader are required');
+      return;
+    }
+    
+    if (trimmedName.length < 2 || trimmedLeader.length < 2) {
+      setError('Team name and leader must be at least 2 characters');
       return;
     }
 
@@ -49,7 +58,11 @@ export default function TeamsPage() {
       setSuccess('');
       setCreatingQR(true);
       
-      const team = await createTeam(formData);
+      const team = await createTeam({
+        ...formData,
+        teamName: trimmedName,
+        teamLeader: trimmedLeader
+      });
       
       try {
         await generateTeamQR(team.id, window.location.origin);
@@ -69,7 +82,15 @@ export default function TeamsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this team?')) return;
+    const team = teams.find(t => t.id === id);
+    const hasEvaluations = team?.current_qr_id;
+    
+    let warningMsg = 'Are you sure you want to delete this team?';
+    if (hasEvaluations) {
+      warningMsg = '⚠️ WARNING: This team has evaluations associated with it. Deleting will also remove all evaluation data. This action cannot be undone. Do you still want to delete?';
+    }
+    
+    if (!confirm(warningMsg)) return;
     
     try {
       await deleteTeam(id);

@@ -76,6 +76,13 @@ export async function submitEvaluation(data) {
   });
 }
 
+export async function deleteEvaluation(id) {
+  console.log('Deleting evaluation:', id);
+  return request(`/evaluations/${id}`, {
+    method: 'DELETE'
+  });
+}
+
 export async function getEvaluationCount(judgeId, roundNumber) {
   return request(`/evaluations/count/${judgeId}/${roundNumber}`);
 }

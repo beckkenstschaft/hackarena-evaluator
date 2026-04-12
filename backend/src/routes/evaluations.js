@@ -188,4 +188,29 @@ router.get('/export', (req, res) => {
   res.download(filePath, 'evaluations.xlsx');
 });
 
+router.delete('/:id', (req, res) => {
+  const db = getDb();
+  const { id } = req.params;
+  
+  console.log('Delete evaluation:', id);
+  
+  try {
+    const result = db.prepare('DELETE FROM evaluations WHERE id = ?').run(id);
+    console.log('Delete result:', result);
+    
+    if (result.changes === 0) {
+      console.log('Evaluation not found:', id);
+      return res.status(404).json({ error: 'Evaluation not found' });
+    }
+    
+    exportEvaluationsToExcel(db);
+    console.log('Evaluation deleted:', id);
+    
+    res.json({ message: 'Evaluation deleted successfully' });
+  } catch (err) {
+    console.error('Delete error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

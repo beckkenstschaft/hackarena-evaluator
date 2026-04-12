@@ -27,15 +27,22 @@ export default function JudgesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newJudgeName.trim()) {
+    const trimmedName = newJudgeName.trim();
+    
+    if (!trimmedName) {
       setError('Judge name is required');
+      return;
+    }
+    
+    if (trimmedName.length < 2) {
+      setError('Judge name must be at least 2 characters');
       return;
     }
 
     try {
       setError('');
       setSuccess('');
-      await createJudge(newJudgeName.trim());
+      await createJudge(trimmedName);
       setSuccess('Judge added successfully!');
       setNewJudgeName('');
       setShowForm(false);
@@ -46,7 +53,8 @@ export default function JudgesPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to remove this judge?')) return;
+    const warningMsg = '⚠️ WARNING: Removing this judge will also remove all their evaluations. This action cannot be undone. Do you still want to remove?';
+    if (!confirm(warningMsg)) return;
     
     try {
       await deleteJudge(id);

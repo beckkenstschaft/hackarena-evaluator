@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAdminStats, getJudgeStats, getEvaluations, getTeams, regenerateTeamQR, getTeamQRStatus, generateTeamQR } from '../utils/api';
+import { getAdminStats, getJudgeStats, getEvaluations, getTeams, regenerateTeamQR, getTeamQRStatus, generateTeamQR, deleteEvaluation } from '../utils/api';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -84,6 +84,17 @@ export default function AdminDashboard() {
       link.click();
     } catch (err) {
       alert('Failed to download QR');
+    }
+  };
+
+  const handleDeleteEvaluation = async (evalId) => {
+    if (!confirm('⚠️ Are you sure you want to delete this evaluation? This will also remove it from the Excel file. This action cannot be undone.')) return;
+    
+    try {
+      await deleteEvaluation(evalId);
+      loadData();
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -240,7 +251,7 @@ export default function AdminDashboard() {
 
       {activeTab === 'evaluations' && (
         <div className="card">
-          <h3 style={{ marginBottom: 20 }}>All Evaluations</h3>
+          <h3 style={{ marginBottom: 20 }}>All Evaluations ({evaluations.length})</h3>
           {evaluations.length > 0 ? (
             <table className="table">
               <thead>
@@ -250,6 +261,7 @@ export default function AdminDashboard() {
                   <th>Leader</th>
                   <th>Score</th>
                   <th>Round</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -260,6 +272,16 @@ export default function AdminDashboard() {
                     <td>{ev.team_leader}</td>
                     <td><span className="score-badge score-high">{ev.total_score}/100</span></td>
                     <td>Round {ev.round_number}</td>
+                    <td>
+                      <button 
+                        className="action-btn delete" 
+                        onClick={() => handleDeleteEvaluation(ev.id)}
+                        title="Delete Evaluation"
+                        style={{ padding: '6px 10px' }}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

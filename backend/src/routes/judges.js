@@ -7,18 +7,19 @@ const router = express.Router();
 router.post('/', (req, res) => {
   const { name } = req.body;
   
-  if (!name) {
+  if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Judge name is required' });
   }
 
+  const trimmedName = name.trim();
   const db = getDb();
   const id = uuidv4();
 
   try {
     const stmt = db.prepare('INSERT INTO judges (id, name) VALUES (?, ?)');
-    stmt.run(id, name);
+    stmt.run(id, trimmedName);
     
-    res.status(201).json({ id, name });
+    res.status(201).json({ id, name: trimmedName });
   } catch (err) {
     if (err.message.includes('UNIQUE constraint failed')) {
       return res.status(400).json({ error: 'Judge name already exists' });

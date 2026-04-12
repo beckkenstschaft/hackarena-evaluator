@@ -12,6 +12,13 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'Team name and team leader are required' });
   }
 
+  const trimmedName = teamName.trim();
+  const trimmedLeader = teamLeader.trim();
+  
+  if (!trimmedName || !trimmedLeader) {
+    return res.status(400).json({ error: 'Team name and team leader cannot be empty' });
+  }
+
   const db = getDb();
   const id = uuidv4();
 
@@ -20,9 +27,9 @@ router.post('/', (req, res) => {
       INSERT INTO teams (id, team_name, team_leader, team_details, team_members, contact_email)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
-    stmt.run(id, teamName, teamLeader, teamDetails || '', teamMembers || '', contactEmail || '');
+    stmt.run(id, trimmedName, trimmedLeader, teamDetails?.trim() || '', teamMembers?.trim() || '', contactEmail?.trim() || '');
     
-    res.status(201).json({ id, teamName, teamLeader, teamDetails, teamMembers, contactEmail });
+    res.status(201).json({ id, teamName: trimmedName, teamLeader: trimmedLeader, teamDetails, teamMembers, contactEmail });
   } catch (err) {
     if (err.message.includes('UNIQUE constraint failed')) {
       return res.status(400).json({ error: 'Team name already exists' });

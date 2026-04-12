@@ -895,6 +895,22 @@ label {
   background: rgba(239, 68, 68, 0.05);
 }
 
+.action-btn.delete {
+  background: var(--bg-secondary);
+  color: var(--error);
+  border: 1px solid var(--error);
+  padding: 6px 12px;
+  height: auto;
+  width: auto;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.action-btn.delete:hover {
+  background: var(--error);
+  color: white;
+}
+
 /* Rank Badge */
 .rank-badge {
   width: 32px;

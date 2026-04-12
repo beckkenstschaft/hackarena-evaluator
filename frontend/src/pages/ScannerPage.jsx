@@ -15,6 +15,8 @@ export default function ScannerPage() {
   const { teamId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const qrParam = searchParams.get('qr');
+  const teamParam = searchParams.get('team');
   const [showScanner, setShowScanner] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [scannerError, setScannerError] = useState('');
@@ -316,10 +318,11 @@ export default function ScannerPage() {
     }
   };
 
-  if (loading && !team && (teamId || searchParams.get('qr') || searchParams.get('team'))) {
+  if (loading && !team && (teamId || qrParam || teamParam)) {
     return (
       <div className="loading">
         <div className="spinner"></div>
+        {error && <p className="error-message" style={{marginTop: 16}}>{error}</p>}
       </div>
     );
   }
