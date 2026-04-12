@@ -248,9 +248,17 @@ export default function ScannerPage() {
   };
 
   const handleScoreChange = (criterion, value) => {
-    const numValue = parseInt(value) || 0;
-    const clampedValue = Math.min(20, Math.max(0, numValue));
+    if (value === '') {
+      setScores(prev => ({ ...prev, [criterion]: 0 }));
+      return;
+    }
+    const numValue = parseFloat(value) || 0;
+    const clampedValue = Math.min(20, Math.max(0, Math.round(numValue * 10) / 10));
     setScores(prev => ({ ...prev, [criterion]: clampedValue }));
+  };
+
+  const handleScoreFocus = (criterion) => {
+    setScores(prev => ({ ...prev, [criterion]: '' }));
   };
 
   const getTotalScore = () => {
@@ -471,8 +479,8 @@ export default function ScannerPage() {
             )}
           </div>
 
-          <div className="card animate-fade-in-up" style={{ marginBottom: 24, animationDelay: '0.1s' }}>
-            <h3 style={{ marginBottom: 20 }}>Criteria Scores (0-20 each)</h3>
+            <div className="card animate-fade-in-up" style={{ marginBottom: 24, animationDelay: '0.1s' }}>
+            <h3 style={{ marginBottom: 20 }}>Criteria Scores (0-20 each, decimals allowed)</h3>
             <div className="scores-grid">
               {CRITERIA.map(({ key, label }) => (
                 <div key={key} className="score-input-group">
@@ -482,8 +490,11 @@ export default function ScannerPage() {
                     className="input score-input"
                     min="0"
                     max="20"
+                    step="0.1"
                     value={scores[key]}
                     onChange={(e) => handleScoreChange(key, e.target.value)}
+                    onFocus={() => handleScoreFocus(key)}
+                    placeholder="0"
                     required
                   />
                 </div>
