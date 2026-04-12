@@ -21,7 +21,10 @@ const PORT = process.env.PORT || 5000;
 const USE_HTTPS = process.env.USE_HTTPS === 'true';
 const CERT_PATH = process.env.CERT_PATH || path.join(__dirname, '..', 'certificates');
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173'],
+  credentials: true
+}));
 app.use(express.json());
 
 app.get('/', (req, res) => {
