@@ -110,13 +110,11 @@ export default function ScannerPage() {
         } catch (err) {
           console.error('Scanner error:', err);
           setScannerError('Unable to start camera: ' + (err.message || String(err)));
-          setShowScanner(false);
-          setShowManual(true);
           setCameraStarting(false);
         }
       };
       
-      const timer = setTimeout(startCamera, 100);
+      const timer = setTimeout(startCamera, 200);
       return () => clearTimeout(timer);
     } else {
       if (html5QrcodeScanner.current) {
@@ -603,7 +601,16 @@ export default function ScannerPage() {
               </div>
             )}
             
-            <div id="qr-reader" style={{ display: cameraStarting ? 'none' : 'block' }}></div>
+            <div 
+              id="qr-reader" 
+              className="qr-reader-container"
+              style={{ 
+                minHeight: 300,
+                borderRadius: 'var(--radius)',
+                overflow: 'hidden',
+                border: '1px solid var(--border)'
+              }}
+            ></div>
             
             <div style={{ marginTop: 16 }}>
               <button className="btn btn-secondary" style={{ width: '100%' }} onClick={handleManualEntry}>
@@ -657,21 +664,28 @@ export default function ScannerPage() {
           opacity: 1;
         }
         
-        #qr-reader video {
-          border-radius: var(--radius);
+        .qr-reader-container {
           width: 100%;
+          position: relative;
         }
         
-        #qr-reader__scan_region {
-          background: transparent;
+        .qr-reader-container video {
+          width: 100% !important;
+          height: auto !important;
+          border-radius: var(--radius);
+          object-fit: cover;
         }
         
-        #qr-reader__dashboard {
-          display: none;
+        .qr-reader-container #qr-reader__scan_region {
+          background: transparent !important;
         }
         
-        #qr-reader__dashboard_section_swaplink {
-          display: none;
+        .qr-reader-container #qr-reader__dashboard {
+          display: none !important;
+        }
+        
+        .qr-reader-container img {
+          max-width: 100%;
         }
       `}</style>
     </div>
