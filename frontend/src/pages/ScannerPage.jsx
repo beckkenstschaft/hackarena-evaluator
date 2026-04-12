@@ -58,10 +58,72 @@ export default function ScannerPage() {
   useEffect(() => {
     return () => {
       if (html5QrcodeScanner.current) {
+        html5QrcodeScanner.current.stop().catch(() => {});
         html5QrcodeScanner.current.clear().catch(() => {});
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (showScanner) {
+      const startCamera = async () => {
+        try {
+          if (html5QrcodeScanner.current) {
+            try {
+              await html5QrcodeScanner.current.stop();
+            } catch (e) {}
+          }
+          
+          html5QrcodeScanner.current = new Html5Qrcode('qr-reader');
+          
+          const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+          };
+          
+          await html5QrcodeScanner.current.start(
+            { facingMode: 'environment' },
+            config,
+            (decodedText) => {
+              let qrId;
+              try {
+                const url = new URL(decodedText);
+                qrId = url.searchParams.get('qr');
+              } catch {
+                qrId = decodedText.includes('qr=') ? decodedText.split('qr=')[1]?.split('&')[0] : null;
+              }
+              
+              if (qrId) {
+                html5QrcodeScanner.current.stop().catch(() => {});
+                setShowScanner(false);
+                handleQRScan(qrId);
+              } else {
+                setScannerError('Invalid QR code format');
+              }
+            },
+            (err) => {
+              console.log('Scan error:', err);
+            }
+          );
+          
+          setCameraStarting(false);
+        } catch (err) {
+          console.error('Scanner error:', err);
+          setScannerError('Unable to start camera: ' + (err.message || String(err)));
+          setShowScanner(false);
+          setShowManual(true);
+          setCameraStarting(false);
+        }
+      };
+      
+      const timer = setTimeout(startCamera, 100);
+      return () => clearTimeout(timer);
+    } else {
+      if (html5QrcodeScanner.current) {
+        html5QrcodeScanner.current.stop().catch(() => {});
+      }
+    }
+  }, [showScanner]);
 
   const handleQRScan = async (qrId) => {
     try {
@@ -165,62 +227,12 @@ export default function ScannerPage() {
     }
   };
 
-  const startScanner = async () => {
+  const startScanner = () => {
     setShowScanner(true);
     setScannerError('');
     setShowManual(false);
     setQrInvalid(false);
     setCameraStarting(true);
-    
-    setTimeout(async () => {
-      try {
-        if (html5QrcodeScanner.current) {
-          await html5QrcodeScanner.current.stop();
-        }
-        
-        html5QrcodeScanner.current = new Html5Qrcode('qr-reader');
-        
-        const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          preferFrontCamera: false,
-          facingMode: 'environment'
-        };
-        
-        await html5QrcodeScanner.current.start(
-          { facingMode: 'environment' },
-          config,
-          (decodedText) => {
-            let qrId;
-            try {
-              const url = new URL(decodedText);
-              qrId = url.searchParams.get('qr');
-            } catch {
-              qrId = decodedText.includes('qr=') ? decodedText.split('qr=')[1]?.split('&')[0] : null;
-            }
-            
-            if (qrId) {
-              html5QrcodeScanner.current.stop().catch(() => {});
-              setShowScanner(false);
-              handleQRScan(qrId);
-            } else {
-              setScannerError('Invalid QR code format');
-            }
-          },
-          (err) => {
-            // Ignore scan errors
-          }
-        );
-        
-        setCameraStarting(false);
-      } catch (err) {
-        console.error('Scanner error:', err);
-        setScannerError('Unable to start camera. Please use manual entry.');
-        setShowScanner(false);
-        setShowManual(true);
-        setCameraStarting(false);
-      }
-    }, 100);
   };
 
   const handleManualEntry = () => {
