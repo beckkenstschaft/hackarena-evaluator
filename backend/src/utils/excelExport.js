@@ -1,4 +1,4 @@
-import XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -32,44 +32,67 @@ export function exportEvaluationsToExcel(db) {
     return null;
   }
 
-  const data = evaluations.map((row, index) => ({
-    'S.No': index + 1,
-    'Round': row.round_number,
-    'Team Name': row.team_name,
-    'Team Leader': row.team_leader,
-    'Judge Name': row.judge_name,
-    'Novelty': row.novelty,
-    'Usage Score': row.usage_score,
-    'Methodology': row.methodology,
-    'Presentation': row.presentation,
-    'Uniqueness': row.uniqueness,
-    'Total Score': row.total_score,
-    'Remarks': row.remarks,
-    'Evaluated At': row.evaluated_at
-  }));
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'HackArena Scanner';
+  workbook.created = new Date();
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Evaluations');
+  const worksheet = workbook.addWorksheet('Evaluations');
 
-  const colWidths = [
-    { wch: 6 },
-    { wch: 8 },
-    { wch: 25 },
-    { wch: 20 },
-    { wch: 20 },
-    { wch: 10 },
-    { wch: 12 },
-    { wch: 13 },
-    { wch: 14 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 30 },
-    { wch: 22 }
+  worksheet.columns = [
+    { header: 'S.No', key: 'sno', width: 6 },
+    { header: 'Round', key: 'round', width: 8 },
+    { header: 'Team Name', key: 'teamName', width: 25 },
+    { header: 'Team Leader', key: 'teamLeader', width: 20 },
+    { header: 'Judge Name', key: 'judgeName', width: 20 },
+    { header: 'Novelty', key: 'novelty', width: 10 },
+    { header: 'Usage Score', key: 'usageScore', width: 12 },
+    { header: 'Methodology', key: 'methodology', width: 13 },
+    { header: 'Presentation', key: 'presentation', width: 14 },
+    { header: 'Uniqueness', key: 'uniqueness', width: 12 },
+    { header: 'Total Score', key: 'totalScore', width: 12 },
+    { header: 'Remarks', key: 'remarks', width: 30 },
+    { header: 'Evaluated At', key: 'evaluatedAt', width: 22 }
   ];
-  worksheet['!cols'] = colWidths;
 
-  XLSX.writeFile(workbook, excelPath);
-  console.log(`Excel file updated: ${excelPath}`);
+  evaluations.forEach((row, index) => {
+    worksheet.addRow({
+      sno: index + 1,
+      round: row.round_number,
+      teamName: row.team_name,
+      teamLeader: row.team_leader,
+      judgeName: row.judge_name,
+      novelty: row.novelty,
+      usageScore: row.usage_score,
+      methodology: row.methodology,
+      presentation: row.presentation,
+      uniqueness: row.uniqueness,
+      totalScore: row.total_score,
+      remarks: row.remarks,
+      evaluatedAt: row.evaluated_at
+    });
+  });
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF6366F1' }
+  };
+  headerRow.alignment = { horizontal: 'center' };
+
+  worksheet.eachRow((row) => {
+    row.alignment = { horizontal: 'left', vertical: 'center' };
+  });
+
+  workbook.xlsx.writeFile(excelPath)
+    .then(() => {
+      console.log(`Excel file updated: ${excelPath}`);
+    })
+    .catch((err) => {
+      console.error('Error writing Excel file:', err);
+      throw err;
+    });
+
   return excelPath;
 }
