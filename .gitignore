@@ -1,3 +1,6 @@
 node_modules/
 *.db
 *.xlsx
+certificates/
+*.pfx
+*.p12
