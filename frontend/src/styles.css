@@ -330,11 +330,11 @@ label {
 }
 
 .header.header-dark .nav-desktop a {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: rgba(167, 167, 167, 0.85) !important;
 }
 
 .header.header-dark .nav-desktop a:hover {
-  color: #fff !important;
+  color: #b2d5f3 !important;
   background: rgba(255, 255, 255, 0.12);
 }
 
@@ -1195,6 +1195,52 @@ input[type="range"]::-moz-range-thumb {
 .admin-qr-actions .btn {
   padding: 8px 16px;
   font-size: 13px;
+}
+
+.eval-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eval-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.eval-item-info h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.eval-item-info p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.eval-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.round-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .footer {

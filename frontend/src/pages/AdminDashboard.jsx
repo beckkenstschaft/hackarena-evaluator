@@ -191,29 +191,23 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 24 }}>
+          <div className="card" style={{ marginTop: 24, overflow: 'hidden' }}>
             <h3 style={{ marginBottom: 16 }}>Recent Evaluations</h3>
             {evaluations.length > 0 ? (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Judge</th>
-                    <th>Team</th>
-                    <th>Score</th>
-                    <th>Round</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {evaluations.slice(0, 10).map(ev => (
-                    <tr key={ev.id}>
-                      <td>{ev.judge_name}</td>
-                      <td><strong>{ev.team_name}</strong></td>
-                      <td><span className="score-badge score-high">{ev.total_score}/100</span></td>
-                      <td>Round {ev.round_number}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="eval-cards-list">
+                {evaluations.slice(0, 10).map(ev => (
+                  <div key={ev.id} className="eval-item-card">
+                    <div className="eval-item-info">
+                      <h4>{ev.team_name}</h4>
+                      <p>{ev.judge_name}</p>
+                    </div>
+                    <div className="eval-item-meta">
+                      <span className="score-badge score-high">{ev.total_score}/100</span>
+                      <span className="round-badge">Round {ev.round_number}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <p style={{ color: 'var(--text-muted)' }}>No evaluations yet</p>
             )}
@@ -253,39 +247,29 @@ export default function AdminDashboard() {
         <div className="card">
           <h3 style={{ marginBottom: 20 }}>All Evaluations ({evaluations.length})</h3>
           {evaluations.length > 0 ? (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Judge</th>
-                  <th>Team</th>
-                  <th>Leader</th>
-                  <th>Score</th>
-                  <th>Round</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evaluations.map(ev => (
-                  <tr key={ev.id}>
-                    <td>{ev.judge_name}</td>
-                    <td><strong>{ev.team_name}</strong></td>
-                    <td>{ev.team_leader}</td>
-                    <td><span className="score-badge score-high">{ev.total_score}/100</span></td>
-                    <td>Round {ev.round_number}</td>
-                    <td>
-                      <button 
-                        className="action-btn delete" 
-                        onClick={() => handleDeleteEvaluation(ev.id)}
-                        title="Delete Evaluation"
-                        style={{ padding: '6px 10px' }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="admin-qr-list">
+              {evaluations.map(ev => (
+                <div key={ev.id} className="admin-qr-item">
+                  <div className="admin-qr-item-header">
+                    <div>
+                      <h4>{ev.team_name}</h4>
+                      <p>Judge: {ev.judge_name} | Leader: {ev.team_leader}</p>
+                    </div>
+                    <span className="score-badge score-high">{ev.total_score}/100</span>
+                  </div>
+                  <div className="admin-qr-actions">
+                    <span className="round-badge">Round {ev.round_number}</span>
+                    <button 
+                      className="btn btn-danger"
+                      onClick={() => handleDeleteEvaluation(ev.id)}
+                      style={{ padding: '8px 16px', fontSize: '13px' }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <p style={{ color: 'var(--text-muted)' }}>No evaluations yet</p>
           )}
