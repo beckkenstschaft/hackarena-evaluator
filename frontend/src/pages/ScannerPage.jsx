@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { getTeam, getTeams, getJudges, submitEvaluation, getEvaluationByTeam } from '../utils/api';
+import { getTeam, getTeams, getJudges, submitEvaluation, getEvaluationByTeam, getEvaluationCount, getEvaluatedTeams } from '../utils/api';
 
 const CRITERIA = [
   { key: 'novelty', label: '1. Novelty', max: 20 },
@@ -35,6 +35,10 @@ export default function ScannerPage() {
   const [success, setSuccess] = useState('');
   const [alreadyEvaluated, setAlreadyEvaluated] = useState(null);
   const [submittedEval, setSubmittedEval] = useState(null);
+  const [evalCount, setEvalCount] = useState({ count: 0, remaining: 20 });
+  const [evaluatedTeams, setEvaluatedTeams] = useState([]);
+  const [roundNumber, setRoundNumber] = useState(1);
+  const [roundLimitReached, setRoundLimitReached] = useState(false);
   const html5QrcodeScanner = useRef(null);
 
   useEffect(() => {
@@ -85,6 +89,35 @@ export default function ScannerPage() {
       setJudges(data);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const loadEvalCount = async (judgeId, round) => {
+    try {
+      const data = await getEvaluationCount(judgeId, round);
+      setEvalCount({ count: data.teamsEvaluated, remaining: data.teamsRemaining });
+      if (data.teamsRemaining <= 0) {
+        setRoundLimitReached(true);
+      }
+      const teams = await getEvaluatedTeams(judgeId, round);
+      setEvaluatedTeams(teams.map(t => t.team_id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleJudgeChange = async (judgeId) => {
+    setSelectedJudge(judgeId);
+    if (judgeId) {
+      await loadEvalCount(judgeId, roundNumber);
+    }
+  };
+
+  const handleRoundChange = async (round) => {
+    setRoundNumber(round);
+    setRoundLimitReached(false);
+    if (selectedJudge) {
+      await loadEvalCount(selectedJudge, round);
     }
   };
 
@@ -189,7 +222,7 @@ export default function ScannerPage() {
       const result = await submitEvaluation({
         teamId: team.id,
         judgeId: selectedJudge,
-        roundNumber: 1,
+        roundNumber: roundNumber,
         ...scores,
         remarks
       });
@@ -200,8 +233,15 @@ export default function ScannerPage() {
         judge_name: judges.find(j => j.id === selectedJudge)?.name
       });
       setSuccess('Evaluation submitted successfully!');
+      
+      await loadEvalCount(selectedJudge, roundNumber);
     } catch (err) {
-      setError(err.message);
+      if (err.message.includes('Maximum limit')) {
+        setError(err.message);
+        setRoundLimitReached(true);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -307,7 +347,7 @@ export default function ScannerPage() {
             <select 
               className="input" 
               value={selectedJudge}
-              onChange={(e) => setSelectedJudge(e.target.value)}
+              onChange={(e) => handleJudgeChange(e.target.value)}
               required
             >
               <option value="">-- Select Judge --</option>
@@ -315,6 +355,25 @@ export default function ScannerPage() {
                 <option key={judge.id} value={judge.id}>{judge.name}</option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label>Select Round *</label>
+            <select 
+              className="input" 
+              value={roundNumber}
+              onChange={(e) => handleRoundChange(parseInt(e.target.value))}
+              required
+            >
+              <option value={1}>Round 1 (Max 20 teams)</option>
+              <option value={2}>Round 2</option>
+              <option value={3}>Round 3</option>
+            </select>
+            {selectedJudge && (
+              <p style={{ marginTop: 8, fontSize: 12, color: roundLimitReached ? 'var(--error)' : 'var(--text-secondary)' }}>
+                Teams evaluated: {evalCount.count}/20 {roundLimitReached && <span style={{ color: 'var(--error)' }}>(Limit reached for Round {roundNumber})</span>}
+              </p>
+            )}
           </div>
 
           <div className="card" style={{ marginBottom: 24 }}>

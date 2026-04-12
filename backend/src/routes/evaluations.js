@@ -6,6 +6,7 @@ const router = express.Router();
 
 const CRITERIA = ['novelty', 'usage_score', 'methodology', 'presentation', 'uniqueness'];
 const MAX_SCORE = 20;
+const MAX_TEAMS_PER_JUDGE_PER_ROUND = 20;
 
 router.post('/', (req, res) => {
   const { teamId, judgeId, roundNumber, novelty, usage_score, methodology, presentation, uniqueness, remarks } = req.body;
@@ -37,6 +38,18 @@ router.post('/', (req, res) => {
 
     if (existingEval) {
       return res.status(400).json({ error: 'Evaluation already exists for this team, judge, and round' });
+    }
+
+    const evalCount = db.prepare(
+      'SELECT COUNT(*) as count FROM evaluations WHERE judge_id = ? AND round_number = ?'
+    ).get(judgeId, round);
+
+    if (evalCount.count >= MAX_TEAMS_PER_JUDGE_PER_ROUND) {
+      return res.status(400).json({ 
+        error: `Maximum limit of ${MAX_TEAMS_PER_JUDGE_PER_ROUND} teams reached for round ${round}. Please evaluate in round ${round + 1}.`,
+        nextRound: round + 1,
+        teamsEvaluated: evalCount.count
+      });
     }
 
     const stmt = db.prepare(`
@@ -129,6 +142,36 @@ router.get('/team/:teamId', (req, res) => {
   `).all(teamId);
   
   res.json(evaluations);
+});
+
+router.get('/count/:judgeId/:roundNumber', (req, res) => {
+  const db = getDb();
+  const { judgeId, roundNumber } = req.params;
+  
+  const result = db.prepare(
+    'SELECT COUNT(*) as count FROM evaluations WHERE judge_id = ? AND round_number = ?'
+  ).get(judgeId, parseInt(roundNumber));
+  
+  res.json({
+    judgeId,
+    roundNumber: parseInt(roundNumber),
+    teamsEvaluated: result.count,
+    teamsRemaining: MAX_TEAMS_PER_JUDGE_PER_ROUND - result.count
+  });
+});
+
+router.get('/evaluated-teams/:judgeId/:roundNumber', (req, res) => {
+  const db = getDb();
+  const { judgeId, roundNumber } = req.params;
+  
+  const teams = db.prepare(`
+    SELECT e.team_id, t.team_name
+    FROM evaluations e
+    JOIN teams t ON e.team_id = t.id
+    WHERE e.judge_id = ? AND e.round_number = ?
+  `).all(judgeId, parseInt(roundNumber));
+  
+  res.json(teams);
 });
 
 export default router;

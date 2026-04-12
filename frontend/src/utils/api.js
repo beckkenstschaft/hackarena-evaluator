@@ -75,3 +75,11 @@ export async function submitEvaluation(data) {
     body: JSON.stringify(data)
   });
 }
+
+export async function getEvaluationCount(judgeId, roundNumber) {
+  return request(`/evaluations/count/${judgeId}/${roundNumber}`);
+}
+
+export async function getEvaluatedTeams(judgeId, roundNumber) {
+  return request(`/evaluations/evaluated-teams/${judgeId}/${roundNumber}`);
+}
