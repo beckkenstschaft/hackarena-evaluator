@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = 'https://disco-jones-journals-catalogs.trycloudflare.com';
 
 async function request(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
