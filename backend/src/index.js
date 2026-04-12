@@ -5,6 +5,7 @@ import { getDb, closeDb } from './database.js';
 import teamsRouter from './routes/teams.js';
 import judgesRouter from './routes/judges.js';
 import evaluationsRouter from './routes/evaluations.js';
+import adminRouter from './routes/admin.js';
 import { exportEvaluationsToExcel } from './utils/excelExport.js';
 
 dotenv.config();
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 app.use('/api/teams', teamsRouter);
 app.use('/api/judges', judgesRouter);
 app.use('/api/evaluations', evaluationsRouter);
+app.use('/api/admin', adminRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

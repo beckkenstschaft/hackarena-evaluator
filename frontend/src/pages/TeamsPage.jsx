@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTeams, createTeam, deleteTeam, getTeamQRCode } from '../utils/api';
+import { getTeams, createTeam, deleteTeam, generateTeamQR } from '../utils/api';
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState([]);
@@ -15,6 +15,7 @@ export default function TeamsPage() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [creatingQR, setCreatingQR] = useState(false);
 
   useEffect(() => {
     loadTeams();
@@ -46,13 +47,24 @@ export default function TeamsPage() {
     try {
       setError('');
       setSuccess('');
-      await createTeam(formData);
-      setSuccess('Team created successfully!');
+      setCreatingQR(true);
+      
+      const team = await createTeam(formData);
+      
+      try {
+        await generateTeamQR(team.id, window.location.origin);
+      } catch (qrErr) {
+        console.log('QR generation skipped:', qrErr.message);
+      }
+      
+      setSuccess('Team created successfully! QR code generated.');
       setFormData({ teamName: '', teamLeader: '', teamDetails: '', teamMembers: '', contactEmail: '' });
       setShowForm(false);
       loadTeams();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setCreatingQR(false);
     }
   };
 
@@ -69,8 +81,22 @@ export default function TeamsPage() {
 
   const viewQR = async (teamId) => {
     try {
-      const data = await getTeamQRCode(teamId);
-      setShowQR(data);
+      const team = teams.find(t => t.id === teamId);
+      if (!team?.current_qr_id) {
+        setError('No QR code generated for this team. Generate one from Admin > QR Management.');
+        return;
+      }
+      const baseUrl = window.location.origin;
+      const qrUrl = `${baseUrl}/scan?qr=${team.current_qr_id}`;
+      
+      const QRCode = await import('qrcode').then(m => m.default);
+      const qrDataUrl = await QRCode.toDataURL(qrUrl, {
+        width: 300,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
+      
+      setShowQR({ teamName: team.team_name, qrCode: qrDataUrl });
     } catch (err) {
       setError(err.message);
     }
@@ -161,7 +187,9 @@ export default function TeamsPage() {
                 />
               </div>
             </div>
-            <button type="submit" className="btn btn-primary">Create Team</button>
+            <button type="submit" className="btn btn-primary" disabled={creatingQR}>
+              {creatingQR ? 'Creating...' : 'Create Team'}
+            </button>
           </form>
         </div>
       )}
@@ -180,14 +208,18 @@ export default function TeamsPage() {
                 <p>Led by {team.team_leader}</p>
               </div>
               <div className="action-btns">
-                <button className="action-btn" onClick={() => viewQR(team.id)} title="View QR">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="14" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                  </svg>
-                </button>
+                {team.current_qr_id ? (
+                  <button className="action-btn" onClick={() => viewQR(team.id)} title="View QR">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="14" width="7" height="7"></rect>
+                      <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', padding: '0 8px' }}>No QR</span>
+                )}
                 <button className="action-btn delete" onClick={() => handleDelete(team.id)} title="Delete">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="3 6 5 6 21 6"></polyline>

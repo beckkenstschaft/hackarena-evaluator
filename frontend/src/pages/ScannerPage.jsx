@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { getTeam, getTeams, getJudges, submitEvaluation, getEvaluationByTeam, getEvaluationCount, getEvaluatedTeams } from '../utils/api';
+import { getTeam, getTeams, getJudges, submitEvaluation, getEvaluationByTeam, getEvaluationCount, getEvaluatedTeams, scanQR, getTeamQRStatus } from '../utils/api';
 
 const CRITERIA = [
-  { key: 'novelty', label: '1. Novelty', max: 20 },
-  { key: 'usage_score', label: '2. Usage', max: 20 },
-  { key: 'methodology', label: '3. Methodology', max: 20 },
-  { key: 'presentation', label: '4. Presentation', max: 20 },
-  { key: 'uniqueness', label: '5. Uniqueness', max: 20 }
+  { key: 'novelty', label: 'Novelty', max: 20 },
+  { key: 'usage_score', label: 'Usage', max: 20 },
+  { key: 'methodology', label: 'Methodology', max: 20 },
+  { key: 'presentation', label: 'Presentation', max: 20 },
+  { key: 'uniqueness', label: 'Uniqueness', max: 20 }
 ];
 
 export default function ScannerPage() {
   const { teamId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [showScanner, setShowScanner] = useState(false);
   const [showManual, setShowManual] = useState(false);
@@ -36,18 +37,22 @@ export default function ScannerPage() {
   const [alreadyEvaluated, setAlreadyEvaluated] = useState(null);
   const [submittedEval, setSubmittedEval] = useState(null);
   const [evalCount, setEvalCount] = useState({ count: 0, remaining: 20 });
-  const [evaluatedTeams, setEvaluatedTeams] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
   const [roundLimitReached, setRoundLimitReached] = useState(false);
+  const [scannedJudgeId, setScannedJudgeId] = useState(null);
+  const [qrInvalid, setQrInvalid] = useState(false);
   const html5QrcodeScanner = useRef(null);
 
   useEffect(() => {
-    if (teamId) {
+    const qrParam = searchParams.get('qr');
+    if (qrParam) {
+      handleQRScan(qrParam);
+    } else if (teamId) {
       loadTeam(teamId);
     }
     loadJudges();
     loadTeams();
-  }, [teamId]);
+  }, [teamId, searchParams]);
 
   useEffect(() => {
     return () => {
@@ -56,6 +61,46 @@ export default function ScannerPage() {
       }
     };
   }, []);
+
+  const handleQRScan = async (qrId) => {
+    try {
+      setLoading(true);
+      setScannedJudgeId(null);
+      
+      const result = await scanQR(qrId, 'pending');
+      
+      if (!result.success) {
+        setQrInvalid(true);
+        setError('Invalid or discontinued QR code');
+        return;
+      }
+
+      setTeam(result.team);
+      
+      const qrStatus = await getTeamQRStatus(result.team.id);
+      const latestScan = qrStatus.find(q => q.id === qrId);
+      
+      if (latestScan?.scanned_by_judge_id) {
+        setScannedJudgeId(latestScan.scanned_by_judge_id);
+        setSelectedJudge(latestScan.scanned_by_judge_id);
+      }
+      
+      const existingEval = await getEvaluationByTeam(result.team.id);
+      if (existingEval && existingEval.length > 0) {
+        setAlreadyEvaluated(existingEval[0]);
+      }
+      
+    } catch (err) {
+      if (err.message.includes('discontinued')) {
+        setQrInvalid(true);
+        setError('This QR code has been discontinued. Please use a new QR code.');
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadTeams = async () => {
     try {
@@ -99,8 +144,6 @@ export default function ScannerPage() {
       if (data.teamsRemaining <= 0) {
         setRoundLimitReached(true);
       }
-      const teams = await getEvaluatedTeams(judgeId, round);
-      setEvaluatedTeams(teams.map(t => t.team_id));
     } catch (err) {
       console.error(err);
     }
@@ -125,6 +168,7 @@ export default function ScannerPage() {
     setShowScanner(true);
     setScannerError('');
     setShowManual(false);
+    setQrInvalid(false);
     
     setTimeout(() => {
       try {
@@ -136,17 +180,18 @@ export default function ScannerPage() {
         
         html5QrcodeScanner.current.render(
           (decodedText) => {
-            let tid;
+            let qrId;
             try {
               const url = new URL(decodedText);
-              tid = url.searchParams.get('team');
+              qrId = url.searchParams.get('qr');
             } catch {
-              tid = decodedText.includes('team=') ? decodedText.split('team=')[1]?.split('&')[0] : null;
+              qrId = decodedText.includes('qr=') ? decodedText.split('qr=')[1]?.split('&')[0] : null;
             }
             
-            if (tid) {
+            if (qrId) {
               html5QrcodeScanner.current.clear().catch(() => {});
-              navigate(`/scan/${tid}`);
+              setShowScanner(false);
+              handleQRScan(qrId);
             } else {
               setScannerError('Invalid QR code format');
             }
@@ -167,6 +212,8 @@ export default function ScannerPage() {
     setShowManual(true);
     setShowScanner(false);
     setScannerError('');
+    setQrInvalid(false);
+    setScannedJudgeId(null);
   };
 
   const handleTeamSelect = async (e) => {
@@ -184,6 +231,8 @@ export default function ScannerPage() {
     setTeam(null);
     setSelectedTeamId('');
     setSelectedJudge('');
+    setScannedJudgeId(null);
+    setQrInvalid(false);
     setScores({
       novelty: 0,
       usage_score: 0,
@@ -194,12 +243,14 @@ export default function ScannerPage() {
     setRemarks('');
     setAlreadyEvaluated(null);
     setSubmittedEval(null);
+    setError('');
     navigate('/scan');
   };
 
   const handleScoreChange = (criterion, value) => {
     const numValue = parseInt(value) || 0;
-    setScores(prev => ({ ...prev, [criterion]: Math.min(20, Math.max(0, numValue)) }));
+    const clampedValue = Math.min(20, Math.max(0, numValue));
+    setScores(prev => ({ ...prev, [criterion]: clampedValue }));
   };
 
   const getTotalScore = () => {
@@ -247,10 +298,31 @@ export default function ScannerPage() {
     }
   };
 
-  if (loading && !team && teamId) {
+  if (loading && !team && (teamId || searchParams.get('qr'))) {
     return (
       <div className="loading">
         <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  if (qrInvalid) {
+    return (
+      <div className="landing-container">
+        <div className="card animate-fade-in-up" style={{ maxWidth: 400, textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--error)" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h3 style={{ marginBottom: 8 }}>Invalid QR Code</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{error}</p>
+          <button className="btn btn-primary" onClick={resetForm}>
+            Scan New QR
+          </button>
+        </div>
       </div>
     );
   }
@@ -270,7 +342,14 @@ export default function ScannerPage() {
           <div className="grid grid-2">
             {CRITERIA.map(({ key, label }) => (
               <div key={key}>
-                <p style={{ color: 'var(--text-secondary)' }}>{label}: {scores[key]}/20</p>
+                <label>{label}</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={scores[key]}
+                  readOnly
+                  style={{ width: '100px' }}
+                />
               </div>
             ))}
           </div>
@@ -308,7 +387,14 @@ export default function ScannerPage() {
           <div className="grid grid-2">
             {CRITERIA.map(({ key, label }) => (
               <div key={key}>
-                <p style={{ color: 'var(--text-secondary)' }}>{label}: {alreadyEvaluated[key]}/20</p>
+                <label>{label}</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={alreadyEvaluated[key]}
+                  readOnly
+                  style={{ width: '100px' }}
+                />
               </div>
             ))}
           </div>
@@ -359,6 +445,11 @@ export default function ScannerPage() {
                 <option key={judge.id} value={judge.id}>{judge.name}</option>
               ))}
             </select>
+            {scannedJudgeId && (
+              <p style={{ marginTop: 8, fontSize: 12, color: 'var(--success)' }}>
+                Your QR has been scanned
+              </p>
+            )}
           </div>
 
           <div className="form-group">
@@ -381,34 +472,25 @@ export default function ScannerPage() {
           </div>
 
           <div className="card animate-fade-in-up" style={{ marginBottom: 24, animationDelay: '0.1s' }}>
-            <h3 style={{ marginBottom: 16 }}>Criteria Scores (out of 20 each)</h3>
-            {CRITERIA.map(({ key, label }) => (
-              <div key={key} className="form-group">
-                <label>{label}</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <h3 style={{ marginBottom: 20 }}>Criteria Scores (0-20 each)</h3>
+            <div className="scores-grid">
+              {CRITERIA.map(({ key, label }) => (
+                <div key={key} className="score-input-group">
+                  <label>{label}</label>
                   <input
                     type="number"
-                    className="input"
+                    className="input score-input"
                     min="0"
                     max="20"
                     value={scores[key]}
                     onChange={(e) => handleScoreChange(key, e.target.value)}
                     required
-                    style={{ width: '80px' }}
-                  />
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    value={scores[key]}
-                    onChange={(e) => handleScoreChange(key, e.target.value)}
-                    style={{ flex: 1 }}
                   />
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
             
-            <div className="total-score-display">
+            <div className="total-score-display" style={{ marginTop: 24 }}>
               <strong>Total Score: {getTotalScore()}/100</strong>
             </div>
           </div>
@@ -496,6 +578,32 @@ export default function ScannerPage() {
           Manual Entry
         </button>
       </div>
+
+      <style>{`
+        .scores-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 16px;
+        }
+        
+        .score-input-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        
+        .score-input {
+          text-align: center;
+          font-size: 24px;
+          font-weight: 600;
+          padding: 16px;
+        }
+        
+        .score-input::-webkit-inner-spin-button,
+        .score-input::-webkit-outer-spin-button {
+          opacity: 1;
+        }
+      `}</style>
     </div>
   );
 }

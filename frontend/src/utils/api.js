@@ -83,3 +83,44 @@ export async function getEvaluationCount(judgeId, roundNumber) {
 export async function getEvaluatedTeams(judgeId, roundNumber) {
   return request(`/evaluations/evaluated-teams/${judgeId}/${roundNumber}`);
 }
+
+export async function getAdminStats() {
+  return request('/admin/stats');
+}
+
+export async function getJudgeStats() {
+  return request('/admin/judge-stats');
+}
+
+export async function getJudgeActivity(judgeId) {
+  return request(`/admin/judge/${judgeId}/activity`);
+}
+
+export async function getScanActivity() {
+  return request('/admin/scan-activity');
+}
+
+export async function scanQR(qrId, judgeId) {
+  return request(`/admin/scan/${qrId}`, {
+    method: 'POST',
+    body: JSON.stringify({ judgeId })
+  });
+}
+
+export async function generateTeamQR(teamId, baseUrl) {
+  return request(`/admin/teams/${teamId}/generate-qr`, {
+    method: 'POST',
+    body: JSON.stringify({ baseUrl })
+  });
+}
+
+export async function regenerateTeamQR(teamId, baseUrl) {
+  return request(`/admin/teams/${teamId}/regenerate-qr`, {
+    method: 'POST',
+    body: JSON.stringify({ baseUrl })
+  });
+}
+
+export async function getTeamQRStatus(teamId) {
+  return request(`/admin/teams/${teamId}/qr-status`);
+}

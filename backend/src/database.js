@@ -28,6 +28,7 @@ function initializeDatabase() {
       team_details TEXT,
       team_members TEXT,
       contact_email TEXT,
+      current_qr_id TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -55,9 +56,22 @@ function initializeDatabase() {
       UNIQUE(team_id, judge_id, round_number)
     );
 
+    CREATE TABLE IF NOT EXISTS qr_codes (
+      id TEXT PRIMARY KEY,
+      team_id TEXT NOT NULL,
+      judge_id TEXT,
+      scan_time DATETIME,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (team_id) REFERENCES teams(id),
+      FOREIGN KEY (judge_id) REFERENCES judges(id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_evaluations_team ON evaluations(team_id);
     CREATE INDEX IF NOT EXISTS idx_evaluations_judge ON evaluations(judge_id);
     CREATE INDEX IF NOT EXISTS idx_evaluations_round ON evaluations(round_number);
+    CREATE INDEX IF NOT EXISTS idx_qr_codes_team ON qr_codes(team_id);
+    CREATE INDEX IF NOT EXISTS idx_qr_codes_judge ON qr_codes(judge_id);
   `);
 
   console.log('Database initialized successfully');
