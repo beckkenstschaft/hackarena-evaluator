@@ -70,8 +70,8 @@ if (USE_HTTPS) {
     console.log('HTTP redirect server running on port 80');
   });
 } else {
-  app.listen(PORT, () => {
-    console.log(`HTTP Server running on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`HTTP Server running on http://0.0.0.0:${PORT}`);
   });
 }
 
