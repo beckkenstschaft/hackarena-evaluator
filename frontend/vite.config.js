@@ -7,6 +7,9 @@ const certPath = path.resolve(__dirname, 'certificates');
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || '')
+  },
   server: {
     port: 5173,
     https: fs.existsSync(certPath) ? {

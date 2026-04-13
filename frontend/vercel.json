@@ -1,8 +1,3 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://tried-pristine-disarray.ngrok-free.dev/:path*"
-    }
-  ]
+  "rewrites": []
 }
