@@ -1,4 +1,4 @@
-const API_BASE = 'https://hip-insects-try.loca.lt';
+const API_BASE = 'https://common-weeks-wonder.loca.lt';
 
 async function request(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
