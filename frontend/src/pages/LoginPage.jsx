@@ -88,14 +88,12 @@ export default function LoginPage({ onLogin }) {
             z-index: -1;
           }
           .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            border: none;
             border-radius: 24px;
             padding: 48px;
             width: 100%;
             max-width: 420px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             animation: fadeInUp 0.6s ease-out;
           }
           .login-title {
@@ -240,19 +238,17 @@ export default function LoginPage({ onLogin }) {
           background: rgba(10, 10, 15, 0.75);
           z-index: -1;
         }
-        .login-card {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+.login-card {
+          background: transparent;
+          border: none;
           border-radius: 24px;
           padding: 48px;
           width: 100%;
           max-width: 420px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
           animation: fadeInUp 0.6s ease-out;
         }
         .login-title {
-          font-size: 32px;
+            font-size: 32px;
           font-weight: 700;
           font-family: 'Space Grotesk', sans-serif;
           background: linear-gradient(135deg, var(--primary, #6366f1), var(--accent, #f472b6));

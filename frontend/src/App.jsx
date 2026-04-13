@@ -215,7 +215,7 @@ function App() {
         </Routes>
       ) : (
         <>
-          <Navigation isAdmin={user.type === 'admin'} userName={user.type === 'judge' ? 'Judge' : ''} onLogout={handleLogout} />
+          <Navigation isAdmin={user.type === 'admin'} userName={user.type === 'judge' ? 'Judge' : (user.name || '')} onLogout={handleLogout} />
           <main className="container">
             <Routes>
               <Route path="/" element={<ScannerPage />} />

@@ -2,6 +2,7 @@ import express from 'express';
 import { getDb } from '../database.js';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
+import { exportEvaluationsToExcel } from '../utils/excelExport.js';
 
 const router = express.Router();
 
@@ -57,11 +58,16 @@ router.get('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   const db = getDb();
+  
+  db.prepare('DELETE FROM evaluations WHERE team_id = ?').run(req.params.id);
+  
   const result = db.prepare('DELETE FROM teams WHERE id = ?').run(req.params.id);
   
   if (result.changes === 0) {
     return res.status(404).json({ error: 'Team not found' });
   }
+  
+  exportEvaluationsToExcel(db);
   
   res.json({ message: 'Team deleted successfully' });
 });

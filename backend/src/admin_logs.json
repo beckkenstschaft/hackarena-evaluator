@@ -1,9 +1,55 @@
 {
   "Syed Amaan Hasan": {
-    "loginCount": 1,
+    "loginCount": 7,
     "sessions": [
       {
         "loginTime": "2026-04-12T20:09:31.928Z",
+        "actions": [],
+        "tabsAccessed": [
+          "Login"
+        ],
+        "logoutTime": "2026-04-12T20:12:22.484Z"
+      },
+      {
+        "loginTime": "2026-04-12T20:13:20.520Z",
+        "actions": [],
+        "tabsAccessed": [
+          "Login"
+        ]
+      },
+      {
+        "loginTime": "2026-04-12T20:21:43.794Z",
+        "actions": [],
+        "tabsAccessed": [
+          "Login"
+        ],
+        "logoutTime": "2026-04-12T20:22:54.143Z"
+      },
+      {
+        "loginTime": "2026-04-12T20:30:10.050Z",
+        "actions": [],
+        "tabsAccessed": [
+          "Login"
+        ],
+        "logoutTime": "2026-04-12T20:30:25.357Z"
+      },
+      {
+        "loginTime": "2026-04-13T04:13:34.147Z",
+        "actions": [],
+        "tabsAccessed": [
+          "Login"
+        ]
+      },
+      {
+        "loginTime": "2026-04-13T04:18:56.648Z",
+        "actions": [],
+        "tabsAccessed": [
+          "Login"
+        ],
+        "logoutTime": "2026-04-13T04:22:40.813Z"
+      },
+      {
+        "loginTime": "2026-04-13T04:56:27.625Z",
         "actions": [],
         "tabsAccessed": [
           "Login"

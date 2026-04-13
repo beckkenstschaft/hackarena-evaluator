@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDb } from '../database.js';
 import { v4 as uuidv4 } from 'uuid';
+import { exportEvaluationsToExcel } from '../utils/excelExport.js';
 
 const router = express.Router();
 
@@ -36,11 +37,16 @@ router.get('/', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   const db = getDb();
+  
+  db.prepare('DELETE FROM evaluations WHERE judge_id = ?').run(req.params.id);
+  
   const result = db.prepare('DELETE FROM judges WHERE id = ?').run(req.params.id);
   
   if (result.changes === 0) {
     return res.status(404).json({ error: 'Judge not found' });
   }
+  
+  exportEvaluationsToExcel(db);
   
   res.json({ message: 'Judge deleted successfully' });
 });

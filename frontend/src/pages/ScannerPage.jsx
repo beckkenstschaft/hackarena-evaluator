@@ -600,7 +600,7 @@ export default function ScannerPage() {
         <source src="/background.mp4" type="video/mp4" />
       </video>
       <div className="landing-overlay"></div>
-      <p className="landing-welcome">Welcome Judge</p>
+      {/* <p className="landing-welcome">Welcome Judge</p> */}
       <h1 className="landing-title">Hacknation</h1>
       <p className="landing-year">2026</p>
       
