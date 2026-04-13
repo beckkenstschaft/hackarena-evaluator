@@ -1,4 +1,4 @@
-const API_BASE = 'https://tried-pristine-disarray.ngrok-free.dev';
+const API_BASE = 'https://hip-insects-try.loca.lt';
 
 async function request(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
